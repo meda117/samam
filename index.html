@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مطعم صمّام</title>
+  <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- الشريط الإعلاني -->
+<div class="top-banner">
+  <p>🔥 توصيل مجاني عند الطلب بـ25 ريال او اكثر 🔥</p>
+</div>
+
+<!-- الهيدر (زي ما هو بالظبط بدون أي تعديل) -->
+<div class="header-bg" id="headerBg"></div>
+<header class="main-header">
+  <div class="header-container">
+      <div class="header-title">SAMAM RESTAURANT</div>
+
+      <!-- القوائم -->
+      <!-- زر المينيو (الموبايل) -->
+<div class="menu-toggle" id="menuToggle">☰</div>
+
+
+
+<!-- منيو الموبايل -->
+<nav class="mobile-menu" id="mobileMenu">
+  <ul>
+    <li><a href="#">الرئيسية</a></li>
+    <li><a href="#about">من نحن</a></li>
+    <li><a href="#menu">قائمة الطعام</a></li>
+    <li><a href="#contact-footer">اتصل بنا</a></li>
+  </ul>
+</nav>
+
+      <!-- السلة -->
+      <div class="cart-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/833/833314.png" alt="السلة" class="cart-icon" />
+        <span class="cart-count">0</span>
+      </div>
+      
+    </div>
+  </header>
+
+  <!-- قسم الهيرو -->
+  <section class="hero-section">
+    <img src="images/hero 1.jpg (2).jpg" alt="صورة المطعم" class="hero-img">
+    <div class="hero-overlay"></div>
+    <div class="hero-logo">
+      <img src="images/logo.png.png" alt="لوجو فوق الصورة">
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">ــــــــــــــــــــ مضغوط واكثر</h1>
+      <a href="#menu" class="menu-btn">قائمة الطعام</a>
+    </div>
+  </section>
+
+ <!-- قسم من نحن -->
+<section class="about-section hidden" id="about">
+  <h2 class="about-title">من نحن</h2>
+  <div class="about-boxes">
+    <div class="about-box">
+      <h3>مطعم صمّام</h3>
+      <p>تأسس مطعم صمّام في عام 2024، بخبرة تسبق سنة التأسيس بأعوام عديدة وشغف كبير. قَدِمنا بفكرة نعيد فيها تعريف الأكلات العربية، ونقدّمها بروح جديدة تُحافظ على الأصالة… ولكن بلمسة صمّام الخاصة.</p>
+    </div>
+    <div class="about-box">
+      <h3>هدفنا</h3>
+      <p>نُحسّن الثقافة العامة عن النكهات، ونقدم أطباقنا بشكل لائق ويعبّر عن جودتنا.</p>
+    </div>
+    <div class="about-box">
+      <h3>رؤيتنا</h3>
+      <p>نُصبح الوجهة الأولى ونكُون بصمة تَميُز تعكس الهوية في تقديم المأكولات العربية بطريقة حديثة.</p>
+    </div>
+    <div class="about-box">
+      <h3>وش يميزنا</h3>
+      <p>وصفات مطورة بنكهاتنا الخاصة، جودة عالية وطعم يرسخ بالذاكرة، أصناف تذكرك بالماضي… بس بطريقتنا.</p>
+    </div>
+  </div>
+</section>
+<!-- قسم قائمة الطعام -->
+<section id="menu" class="menu-section">
+  <h2 class="section-title">قائمة الطعام</h2>
+
+  <!-- أزرار الأقسام -->
+  <div class="category-buttons">
+    <button class="category-btn active" data-category="all">عرض الكل</button>
+    <button class="category-btn" data-category="chicken">دجاج</button>
+    <button class="category-btn" data-category="meat">لحم</button>
+    <button class="category-btn" data-category="rice">رز</button>
+    <button class="category-btn" data-category="sides">طلبات جانبية</button>
+    <button class="category-btn" data-category="drinks">المشروبات</button>
+  </div>
+
+  <!-- حاويات الأقسام -->
+  <div class="menu-items">
+
+    <!-- قسم الدجاج -->
+    <div id="chicken" class="menu-group">
+      <!-- صنف 1: مضغوط دجاج -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/مضغوط دجاج.webp" alt="مضغوط دجاج">
+          <span class="calories">950 cal</span>
+        </div>
+        <h3 class="menu-item-title">مضغوط دجاج</h3>
+        <div class="menu-item-size">
+          <button class="size-btn active" data-price="43">حبة كاملة</button>
+          <button class="size-btn" data-price="21.5">نصف حبة</button>
+        </div>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">43</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+       <!-- صنف 1: مضغوط دجاج -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/مضغوط ابيض.webp" alt="مضغوط دجاج ابيض">
+          <span class="calories">950 cal</span>
+        </div>
+        <div class="wrapped-ribbon">خصم 20% لفترة محدودة</div>
+        <h3 class="menu-item-title">مضغوط دجاج ابيض</h3>
+        <div class="menu-item-size">
+          <button class="size-btn active" data-price="43">حبة كاملة</button>
+          <button class="size-btn" data-price="21.5">نصف حبة</button>
+        </div>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">43</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+      <!-- صنف 2: مظبي دجاج -->
+<div class="menu-item-card">
+  <div class="menu-item-img">
+    <img src="images/مظبي.webp" alt="مظبي دجاج">
+    <span class="calories">3398 cal</span>
+  </div>
+
+  <h3 class="menu-item-title">مظبي دجاج</h3>
+
+  <!-- اختيار الحجم -->
+  <div class="menu-item-size">
+    <button class="size-btn active" data-price="40">حبة كاملة</button>
+    <button class="size-btn" data-price="20">نصف حبة </button>
+  </div>
+
+  <!-- اختيار الرز -->
+  <div class="menu-item-rice">
+  <label>اختيار النوع:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد النوع</option>
+    <option value="plain">سادة</option>
+    <option value="rice">مع الرز</option>
+  </select>
+</div>
+  <div class="menu-item-quantity">
+    <label>الكمية:</label>
+    <input type="number" min="1" value="1" class="quantity-input">
+  </div>
+
+  <p>السعر: <span class="price">40</span> ر.س</p>
+
+  <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+</div>
+      <!-- صنف 3: دجاج مسلوق -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/مسلوق.webp" alt="دجاج مسلوق">
+          <span class="calories">3398 cal</span>
+        </div>
+        <h3 class="menu-item-title">دجاج مسلوق</h3>
+        <div class="menu-item-size">
+          <button class="size-btn active" data-price="44">حبة كاملة</button>
+          <button class="size-btn" data-price="22">نصف حبة</button>
+        </div>
+        <!-- اختيار الرز -->
+  <div class="menu-item-rice">
+  <label>اختيار النوع:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد النوع</option>
+    <option value="plain">سادة</option>
+    <option value="rice">مع الرز</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">44</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+    </div>
+
+    <!-- قسم اللحم -->
+    <div id="meat" class="menu-group" style="display:none;">
+      <!-- صنف 1: نفر مضغوط حاشي -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/حاشي.webp" alt="نفر مضغوط حاشي">
+          <span class="calories">1400 cal</span>
+        </div>
+        <h3 class="menu-item-title">نفر مضغوط حاشي</h3>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">60</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+      <!-- صنف 2: مضغوط لحم حري -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/لحم غنم.webp" alt="مضغوط لحم حري">
+          <span class="calories">1400 cal</span>
+        </div>
+        <h3 class="menu-item-title">مضغوط لحم حري</h3>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">75</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+    </div>
+
+    <!-- قسم الرز -->
+    <div id="rice" class="menu-group" style="display:none;">
+      <!-- صنف 1: نفر رز أبيض -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/رز.webp" alt="نفر رز أبيض">
+          <span class="calories">266 cal</span>
+        </div>
+        <h3 class="menu-item-title">نفر رز أبيض</h3>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">6</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+    </div>
+
+    <!-- قسم الطلبات الجانبية -->
+    <div id="sides" class="menu-group" style="display:none;">
+           <!-- صنف 1: إيدام مسقع -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/مسقع.webp" alt="إيدام مسقع">
+            <span class="calories">240 cal</span>
+          </div>
+          <h3 class="menu-item-title">إيدام مسقع</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">5</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 2: إيدام مشكل خضار -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/مشكل.webp" alt="إيدام مشكل خضار">
+            <span class="calories">185 cal</span>
+          </div>
+          <h3 class="menu-item-title">إيدام مشكل خضار</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">5</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 3: سلطة خيار بالزبادي -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/سلطة خيار.webp" alt="سلطة خيار بالزبادي">
+            <span class="calories">140 cal</span>
+          </div>
+          <h3 class="menu-item-title">سلطة خيار بالزبادي</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">3</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 4: طحينة -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/طحينة.webp" alt="طحينة">
+            <span class="calories">173 cal</span>
+          </div>
+          <h3 class="menu-item-title">طحينة</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 5: سلطة حمراء -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/سلطة.webp" alt="سلطة حمراء">
+            <span class="calories">73 cal</span>
+          </div>
+          <h3 class="menu-item-title">سلطة حمراء</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">1</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 6: كنافة قشطة -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/ك قشطة.webp" alt="كنافة قشطة">
+            <span class="calories">631 cal</span>
+          </div>
+          <h3 class="menu-item-title">كنافة قشطة</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">8</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 7: كنافة نوتيلا -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/ك نوتيلا.webp" alt="كنافة نوتيلا">
+            <span class="calories">631 cal</span>
+          </div>
+          <h3 class="menu-item-title">كنافة نوتيلا</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">10</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+      </div>
+      <!-- الأصناف كما أرسلتها -->
+      <!-- ... ضع الأصناف الجانبية هنا ... -->
+       
+    </div>
+
+    <!-- قسم المشروبات -->
+    <div id="drinks" class="menu-group" style="display:none;">
+             <!-- صنف 1: بيبسي 240مل -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/pepsi.jpg" alt="بيبسي 240مل">
+            <span class="calories">145 cal</span>
+          </div>
+          <h3 class="menu-item-title">بيبسي 240مل</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 2: بيبسي 320مل -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/pepsi.jpg" alt="بيبسي 320مل">
+            <span class="calories">145 cal</span>
+          </div>
+          <h3 class="menu-item-title">بيبسي 320مل</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2.5</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 3: حمضيات 240مل -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/mirinda.jpg" alt="حمضيات 240مل">
+            <span class="calories">145 cal</span>
+          </div>
+          <h3 class="menu-item-title">حمضيات 240مل</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 4: حمضيات 320مل -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/mirinda.jpg" alt="حمضيات 320مل">
+            <span class="calories">145 cal</span>
+          </div>
+          <h3 class="menu-item-title">حمضيات 320مل</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2.5</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+
+        <!-- صنف 5: بيبسي دايت 240مل -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/pepsi.jpg" alt="بيبسي دايت 240مل">
+            <span class="calories">1 cal</span>
+          </div>
+          <h3 class="menu-item-title">بيبسي دايت 240مل</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">2</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
+      </div>
+      <!-- باقي الأقسام (لحم، رز، جانبية، مشروبات) بنفس طريقة القسم السابق مع الأصناف كما أرسلتها أنت -->
+      <!-- ... أرسلها في الجزء التالي لتفادي طول الرد ... -->
+
+    </div>
+      <!-- الأصناف كما أرسلتها -->
+      <!-- ... ضع الأصناف المشروبات هنا ... -->
+    </div>
+
+  </div>
+</section>
+
+  <!-- 🔒 سلايدر السلة -->
+  <div class="cartSlider" id="cartSlider_v2">
+    <div class="cartSlider-header">
+      <h3>سلة الطلبات</h3>
+      <span class="cartSlider-close" id="closeCart_v2">&times;</span>
+    </div>
+
+    <div class="cartSlider-items" id="cartItems_v2">
+      <p class="empty-cart">السلة فارغة حاليا</p>
+    </div>
+
+    <div class="cartSlider-options">
+      <label>طريقة الدفع:</label>
+      <select id="paymentMethod_v2">
+        <option value="كاش">كاش</option>
+        <option value="أونلاين">شبكة (جهاز مدى) </option>
+      </select>
+
+      <label>طريقة الاستلام:</label>
+      <select id="deliveryMethod_v2">
+        <option value="استلام من الفرع">استلام من الفرع</option>
+        <option value="توصيل">توصيل</option>
+       
+      </select>
+    </div>
+<div class="cartSlider-discount">
+  <label>كود الخصم:</label>
+  <input type="text" id="discountCode_v2" placeholder="ادخل كود الخصم">
+  <button id="applyDiscountBtn_v2">تطبيق</button>
+  <p id="discountMessage_v2" style="color: green; margin-top: 5px;"></p>
+</div>
+    <div class="cartSlider-total" id="cartTotal_v2">المجموع: 0 ريال</div>
+
+    <button class="cartSlider-send" id="sendOrder_v2">إرسال الطلب عبر واتساب</button>
+  </div>
+
+ <footer class="site-footer" id="contact-footer">
+  <div class="footer-container">
+
+    <!-- قسم شعار المطعم -->
+    <div class="footer-brand">
+      <div class="logo-wrapper">
+        <img src="images/logo red.png" alt="شعار مطعم صمّام" class="restaurant-logo">
+      </div>
+      <h3>ـــــــــــ مضغوط واكثر</h3>
+      <p class="restaurant-address">جدة - حي السالم</p>
+    </div>
+
+    <!-- كيف توصلنا -->
+<div class="footer-social-section">
+  <h4 class="section-title">كيف توصلنا</h4>
+  <div class="footer-social">
+    <a href="https://wa.me/966539490701" target="_blank" title="واتساب"><img src="images/social.png" alt="واتساب" style="--i:0;"></a>
+    <a href="https://www.facebook.com/samamrst" target="_blank" title="فيسبوك"><img src="images/facebook.png" alt="فيسبوك" style="--i:1;"></a>
+    <a href="https://www.instagram.com/samamrestaurant?igsh=MTIwN211aHQ4YmN4ag==" target="_blank" title="انستجرام"><img src="images/instagram (1).png" alt="انستجرام" style="--i:2;"></a>
+    <a href="https://www.tiktok.com/@samamrst?_r=1&_t=ZS-91NtHAHEunf" target="_blank" title="تيك توك"><img src="images/tik-tok.png" alt="تيك توك" style="--i:3;"></a>
+    <a href="https://twitter.com/yourpage" target="_blank" title="X - تويتر"><img src="images/twitter.png" alt="X - تويتر" style="--i:4;"></a>
+    <a href="https://www.google.com/maps/place/%D9%85%D8%B7%D8%B9%D9%85+%D8%B5%D9%85%D9%91%D8%A7%D9%85%E2%80%AD/@21.4586559,39.3326959,17z/data=!3m1!4b1!4m6!3m5!1s0x15c233c19521b673:0x967e899245f1676e!8m2!3d21.4586509!4d39.330121!16s%2Fg%2F11wnlpjdv3?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" title="موقعنا"><img src="images/map.png" alt="موقعنا" style="--i:5;"></a>
+  </div>
+</div>
+
+<!-- تطبيقات التوصيل -->
+<div class="footer-delivery-section">
+  <h4 class="section-title">متواجدون على تطبيقات التوصيل</h4>
+  <div class="delivery-icons">
+    <a href="#" target="_blank"><img src="images/HungerStation-01-3.svg" alt="هنقرستيشن" style="--i:0;"></a>
+    <a href="#" target="_blank"><img src="images/images.png" alt="كيتا" style="--i:1;"></a>
+    <a href="#" target="_blank"><img src="images/146653.svg" alt="جاهز" style="--i:2;"></a>
+    <a href="#" target="_blank"><img src="images/381979.svg" alt="تو يو" style="--i:3;"></a>
+    <a href="#" target="_blank"><img src="images/marsol.png" alt="مرسول" style="--i:4;"></a>
+    <a href="#" target="_blank"><img src="images/كود-خصم-نون-فود-Noon-Food-logo.png" alt="نون فوده" style="--i:5;"></a>
+  </div>
+</div>
+
+  </div>
+
+  <!-- حقوق الملكية -->
+  <div class="footer-bottom">
+    <p>© 2025 مطعم صمّام. جميع الحقوق محفوظة.</p>
+  </div>
+</footer>
+
+<!-- ====== إعلان يغطي الصفحة بالكامل ====== -->
+<style>
+  #promoModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+    transition: .25s ease;
+  }
+  #promoModal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .promo-box {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .promo-box img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .promo-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #000000cc;
+    color: #fff;
+    border: 0;
+    font-size: 20px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
+
+<div id="promoModal" class="hidden">
+  <div class="promo-box">
+
+    <!-- ❗ غير المسار تحت لو صورتك غير promo.jpg -->
+    <img src="images/pop.png" alt="إعلان ترويجي">
+
+    <button class="promo-close">×</button>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById("promoModal");
+  const closeBtn = document.querySelector(".promo-close");
+
+  // فتح الإعلان عند دخول الصفحة
+  window.addEventListener("load", () => {
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  });
+
+  // إغلاق الإعلان
+  closeBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "auto";
+  });
+
+  // إغلاق عند الضغط خارج الإعلان
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+      document.body.style.overflow = "auto";
+    }
+  });
+</script>
+<!-- ====== نهاية الإعلان ====== -->
+
+</body>
+</html>
