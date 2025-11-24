@@ -417,45 +417,83 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
 
   
   /* ======================== إرسال الطلب على واتساب ======================== */
-  if (sendOrderBtn) {
-    sendOrderBtn.addEventListener('click', () => {
-      if (!cartSliderItems.length) {
-        alert("السلة فارغة يا بطل 🛒");
+if (sendOrderBtn) {
+  sendOrderBtn.addEventListener('click', () => {
+
+    if (!cartSliderItems.length) {
+      alert("السلة فارغة يا بطل 🛒");
+      return;
+    }
+
+    // بداية الرسالة
+    let message = 'طلب جديد:\n';
+    message += '-----------------------------\n\n';
+
+    let subtotal = 0;
+
+    // جمع بيانات المنتجات
+    cartSliderItems.forEach(item => {
+      const riceText = item.rice ? item.rice : "-";
+      const sizeText = item.size ? item.size : "-";
+      const itemTotal = item.price * item.qty;
+
+      message += `(${sizeText} ${item.title})\n`;
+      message += `نوع الرز: ${riceText}\n`;
+      message += `الكمية: ${item.qty}\n`;
+      message += `السعر: ${itemTotal.toFixed(2)} ر.س\n`;
+      message += '-----------------------------\n';
+
+      subtotal += itemTotal;
+    });
+
+    // رسوم التوصيل والخصم
+    let deliveryCharge = 0;
+    if (deliveryMethod && deliveryMethod.value === "توصيل" && subtotal < 25) {
+      deliveryCharge = deliveryFee || 0;
+    }
+
+    const discountAmount = subtotal * (currentDiscount || 0);
+    const total = subtotal - discountAmount + deliveryCharge;
+
+    // المجموعات
+    message += `المجموع الفرعي: ${subtotal.toFixed(2)} ر.س\n`;
+    if (discountAmount > 0) {
+      message += `كود الخصم (${appliedDiscountCode || "-"}) : -${discountAmount.toFixed(2)} ر.س\n`;
+    }
+    if (deliveryCharge > 0) {
+      message += `رسوم التوصيل: ${deliveryCharge.toFixed(2)} ر.س\n`;
+    }
+    message += `المجموع الكلي: ${total.toFixed(2)} ر.س\n\n`;
+
+    // طريقة الدفع والاستلام
+    const paymentText = paymentMethod && paymentMethod.value ? paymentMethod.value : "-";
+    const deliveryText = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : "-";
+
+    message += `طريقة الدفع: ${paymentText}\n`;
+    message += `طريقة الاستلام: ${deliveryText}\n`;
+
+    // بيانات السيارة (إلزامية إذا اختر "تسليم إلى السيارة")
+    if (deliveryText === "تسليم إلى السيارة") {
+      const carType = document.getElementById("carType").value.trim();
+      const carPlate = document.getElementById("carPlate").value.trim();
+
+      if (!carType || !carPlate) {
+        alert("برجاء إدخال بيانات السيارة كاملة");
         return;
       }
 
-      let message = 'طلب جديد من مطعم صمّام:\n\n';
-      let subtotal = 0;
-      
+      message += `نوع السيارة: ${carType}\n`;
+      message += `لوحة السيارة: ${carPlate}\n`;
+    }
 
-      cartSliderItems.forEach(item => {
-        const riceText = item.rice ? `، نوع الرز: ${item.rice}` : "";
-        const sizeText = item.size ? item.size : "";
-        message += `${item.qty} ${item.title} (${sizeText}${riceText})\n`;
-        message += `   الكمية: ${item.qty}\n`;
-        message += `   السعر: ${(item.price * item.qty).toFixed(2)} ر.س\n\n`;
-        subtotal += item.price * item.qty;
-      });
+    message += '\n-----------------------------\n';
 
-      let deliveryCharge = (deliveryMethod && deliveryMethod.value === "توصيل" && subtotal < 25) ? deliveryFee : 0;
-      const discountAmount = subtotal * currentDiscount;
-      const total = subtotal - discountAmount + deliveryCharge;
-
-      message += `المجموع الأساسي: ${subtotal.toFixed(2)} ر.س\n`;
-      if (deliveryCharge > 0) message += `رسوم التوصيل: ${deliveryCharge.toFixed(2)} ر.س\n`;
-      if (discountAmount > 0) message += `تم تطبيق الخصم (${appliedDiscountCode}): ${discountAmount.toFixed(2)} ر.س\n`;
-      message += `المجموع النهائي: ${total.toFixed(2)} ر.س\n\n`;
-
-      let paymentText = paymentMethod && paymentMethod.value ? paymentMethod.value : '-';
-      message += `طريقة الدفع: ${paymentText}\n`;
-      let deliveryTextMsg = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '-';
-      message += `نوع الطلب: ${deliveryTextMsg}\n`;
-
-      const phone = "966539490701";
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-    });
-  }
+    // إرسال الواتساب
+    const phone = "966539490701";
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  });
+}
    const menuToggle = document.getElementById("menuToggle");
   const mobileMenu = document.getElementById("mobileMenu");
 

@@ -217,7 +217,52 @@
 
     <!-- قسم اللحم -->
     <div id="meat" class="menu-group" style="display:none;">
-      <!-- صنف 1: نفر مضغوط حاشي -->
+      <!-- صنف جديد: مضغوط لحم حري أبيض -->
+<div class="menu-item-card">
+  <div class="menu-item-img">
+    <img src="images/لحم ابيض (1).webp" alt="مضغوط لحم حري أبيض">
+    <span class="calories">1400 cal</span>
+  </div>
+  <h3 class="menu-item-title">مضغوط لحم حري أبيض</h3>
+  <div class="menu-item-rice">
+    <label>اختيار نوع الرز:</label>
+    <select class="rice-select">
+      <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+      <option value="plain">رز مزه حبة طويل</option>
+      <option value="abu-bint">رز أبو بنت</option>
+    </select>
+  </div>
+  <div class="menu-item-quantity">
+    <label>الكمية:</label>
+    <input type="number" min="1" value="1" class="quantity-input">
+  </div>
+  <p>السعر: <span class="price">75</span> ر.س</p>
+  <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+</div>
+      <!-- صنف 1: مضغوط حاشي ابيض -->
+      <div class="menu-item-card">
+        <div class="menu-item-img">
+          <img src="images/حاشي ابيض (1).webp" alt="مضغوط حاشي ابيض">
+          <span class="calories">1400 cal</span>
+        </div>
+        <h3 class="menu-item-title">مضغوط حاشي ابيض</h3>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <p>السعر: <span class="price">60</span> ر.س</p>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+      
+       <!-- صنف 1: نفر مضغوط حاشي -->
       <div class="menu-item-card">
         <div class="menu-item-img">
           <img src="images/حاشي.webp" alt="نفر مضغوط حاشي">
@@ -481,42 +526,63 @@
   </div>
 </section>
 
-  <!-- 🔒 سلايدر السلة -->
   <div class="cartSlider" id="cartSlider_v2">
-    <div class="cartSlider-header">
-      <h3>سلة الطلبات</h3>
-      <span class="cartSlider-close" id="closeCart_v2">&times;</span>
-    </div>
-
-    <div class="cartSlider-items" id="cartItems_v2">
-      <p class="empty-cart">السلة فارغة حاليا</p>
-    </div>
-
-    <div class="cartSlider-options">
-      <label>طريقة الدفع:</label>
-      <select id="paymentMethod_v2">
-        <option value="كاش">كاش</option>
-        <option value="أونلاين">شبكة (جهاز مدى) </option>
-      </select>
-
-      <label>طريقة الاستلام:</label>
-      <select id="deliveryMethod_v2">
-        <option value="استلام من الفرع">استلام من الفرع</option>
-        <option value="توصيل">توصيل</option>
-       
-      </select>
-    </div>
-<div class="cartSlider-discount">
-  <label>كود الخصم:</label>
-  <input type="text" id="discountCode_v2" placeholder="ادخل كود الخصم">
-  <button id="applyDiscountBtn_v2">تطبيق</button>
-  <p id="discountMessage_v2" style="color: green; margin-top: 5px;"></p>
-</div>
-    <div class="cartSlider-total" id="cartTotal_v2">المجموع: 0 ريال</div>
-
-    <button class="cartSlider-send" id="sendOrder_v2">إرسال الطلب عبر واتساب</button>
+  <div class="cartSlider-header">
+    <h3>سلة الطلبات</h3>
+    <span class="cartSlider-close" id="closeCart_v2">&times;</span>
   </div>
 
+  <div class="cartSlider-items" id="cartItems_v2">
+    <p class="empty-cart">السلة فارغة حاليا</p>
+  </div>
+
+  <div class="cartSlider-options">
+    <label>طريقة الدفع:</label>
+    <select id="paymentMethod_v2">
+      <option value="كاش">كاش</option>
+      <option value="شبكة (جهاز مدى)">شبكة (جهاز مدى) </option>
+    </select>
+
+    <label>طريقة الاستلام:</label>
+    <select id="deliveryMethod_v2">
+      <option value="استلام من الفرع">استلام من الفرع</option>
+      <option value="توصيل">توصيل</option>
+      <option value="تسليم إلى السيارة">تسليم إلى السيارة</option>
+    </select>
+
+    <!-- الخانات الخاصة بالسيارة -->
+    <div id="carFields" class="car-fields">
+      <label>نوع السيارة:</label>
+      <input type="text" id="carType" placeholder="مثال: تويوتا كامري">
+
+      <label>لوحة السيارة:</label>
+      <input type="text" id="carPlate" placeholder="مثال: أ ب ج 1234">
+    </div>
+  </div>
+  <script>
+  const deliveryMethod = document.getElementById("deliveryMethod_v2");
+  const carFields = document.getElementById("carFields");
+
+  deliveryMethod.addEventListener("change", () => {
+    if (deliveryMethod.value === "تسليم إلى السيارة") {
+      carFields.style.display = "block";
+    } else {
+      carFields.style.display = "none";
+    }
+  });
+</script>
+
+  <div class="cartSlider-discount">
+    <label>كود الخصم:</label>
+    <input type="text" id="discountCode_v2" placeholder="ادخل كود الخصم">
+    <button id="applyDiscountBtn_v2">تطبيق</button>
+    <p id="discountMessage_v2" style="color: green; margin-top: 5px;"></p>
+  </div>
+
+  <div class="cartSlider-total" id="cartTotal_v2">المجموع: 0 ريال</div>
+
+  <button class="cartSlider-send" id="sendOrder_v2">إرسال الطلب عبر واتساب</button>
+</div>
  <footer class="site-footer" id="contact-footer">
   <div class="footer-container">
 

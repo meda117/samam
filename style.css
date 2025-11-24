@@ -939,6 +939,39 @@ body {
   color: #999;
   margin-top: 30px;
 }
+/* تنسيق خانات السيارة */
+.car-fields {
+  display: none;
+  background: #f7f7f7;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid #e3e3e3;
+}
+
+.car-fields label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 0 5px;
+  color: #444;
+}
+
+.car-fields input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d4d4d4;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: 0.3s;
+  background: #fff;
+}
+
+.car-fields input:focus {
+  border-color: #ff7a00;
+  box-shadow: 0 0 5px rgba(255, 122, 0, 0.4);
+  outline: none;
+}
 
 /* ==== عنصر السلة ==== */
 .cart-item {
