@@ -119,11 +119,11 @@ if (["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغ�
       // أسعار السادة
       if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
       if (title === "دجاج مسلوق") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
-      if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21.5 : 43;
+      if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
       if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21.5 : 43;
 
     } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج") {
-      selectedPrice = activeSize.textContent.includes("نصف") ? 21.5 : 43;
+      selectedPrice = activeSize.textContent.includes("نصف") ? 21: 43;
       riceExtra = activeSize.textContent.includes("نصف") ? 0.5 : 1;
 
     } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج ابيض") {
