@@ -120,14 +120,14 @@ if (["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغ�
       if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
       if (title === "دجاج مسلوق") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
       if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
-      if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21.5 : 43;
+      if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
 
     } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج") {
       selectedPrice = activeSize.textContent.includes("نصف") ? 21: 43;
       riceExtra = activeSize.textContent.includes("نصف") ? 0.5 : 1;
 
     } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج ابيض") {
-      selectedPrice = activeSize.textContent.includes("نصف") ? 21.5 : 43;
+      selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
       riceExtra = activeSize.textContent.includes("نصف") ? 0.5 : 1;
 
     } else {
@@ -139,10 +139,7 @@ if (["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغ�
   selectedPrice = parseFloat(activeSize.dataset.price);
 }
 
-// خصم 20% على مضغوط دجاج ابيض فقط
-if (title === "مضغوط دجاج ابيض") {
-  selectedPrice = selectedPrice * 0.8;
-}
+
 
 priceEl.textContent = ((selectedPrice + riceExtra) * qty).toFixed(2);
 };
@@ -244,11 +241,12 @@ priceEl.textContent = ((selectedPrice + riceExtra) * qty).toFixed(2);
     }
 
     // حساب رسوم التوصيل
-    let deliveryCharge = 0;
-    const deliveryMethodVal = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '';
-    if (deliveryMethodVal === "توصيل" && subtotal < 25 && subtotal > 0) {
-      deliveryCharge = deliveryFee;
-    }
+let deliveryCharge = 0;
+const deliveryMethodVal = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '';
+
+if (deliveryMethodVal === "توصيل") {
+  deliveryCharge = deliveryFee; // تتطبق على أي سعر
+}
 
     // حساب الخصم
     const discountAmount = subtotal * currentDiscount;
@@ -446,11 +444,13 @@ if (sendOrderBtn) {
       subtotal += itemTotal;
     });
 
-    // رسوم التوصيل والخصم
-    let deliveryCharge = 0;
-    if (deliveryMethod && deliveryMethod.value === "توصيل" && subtotal < 25) {
-      deliveryCharge = deliveryFee || 0;
-    }
+    // حساب رسوم التوصيل
+let deliveryCharge = 0;
+const deliveryMethodVal = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '';
+
+if (deliveryMethodVal === "توصيل") {
+  deliveryCharge = deliveryFee; // تتطبق على أي سعر
+}
 
     const discountAmount = subtotal * (currentDiscount || 0);
     const total = subtotal - discountAmount + deliveryCharge;
