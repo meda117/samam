@@ -11,14 +11,19 @@
 
   <!-- الشريط الإعلاني -->
 <div class="top-banner">
-  <p>🔥SAMAM RESTAURANT 🔥</p>
+  <p>🔥عرض الافتتاح خصم 25٪ على الأطباق الرئيسية🔥</p>
 </div>
 
-<!-- الهيدر (زي ما هو بالظبط بدون أي تعديل) -->
+
 <div class="header-bg" id="headerBg"></div>
 <header class="main-header">
   <div class="header-container">
-      <div class="header-title">SAMAM RESTAURANT</div>
+
+      <!-- استبدال كلمة SAMAM باللوجو -->
+      <div class="header-title">
+         <img src="images/SAMAM HEADER.png" alt="Samam Logo" class="logo-img" />
+      </div>
+
 
       <!-- القوائم -->
       <!-- زر المينيو (الموبايل) -->
@@ -100,33 +105,7 @@
     <!-- قسم الدجاج -->
     <div id="chicken" class="menu-group">
     
-       <!-- صنف 1: مضغوط دجاج -->
-      <div class="menu-item-card">
-        <div class="menu-item-img">
-          <img src="images/مضغوط ابيض.webp" alt="مضغوط دجاج ابيض">
-          <span class="calories">950 cal</span>
-        </div>
        
-        <h3 class="menu-item-title">مضغوط دجاج ابيض</h3>
-        <div class="menu-item-size">
-          <button class="size-btn active" data-price="43">حبة كاملة</button>
-          <button class="size-btn" data-price="21">نصف حبة</button>
-        </div>
-        <div class="menu-item-rice">
-  <label>اختيار نوع الرز:</label>
-  <select class="rice-select">
-    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
-    <option value="plain">رز مزه حبة طويل</option>
-    <option value="abu-bint">رز أبو بنت</option>
-  </select>
-</div>
-        <div class="menu-item-quantity">
-          <label>الكمية:</label>
-          <input type="number" min="1" value="1" class="quantity-input">
-        </div>
-        <p>السعر: <span class="price">43</span> ر.س</p>
-        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
-      </div>
         <!-- صنف 1: مضغوط دجاج -->
       <div class="menu-item-card">
         <div class="menu-item-img">
@@ -135,7 +114,7 @@
         </div>
         <h3 class="menu-item-title">مضغوط دجاج</h3>
         <div class="menu-item-size">
-          <button class="size-btn active" data-price="43">حبة كاملة</button>
+          <button class="size-btn active" data-price="42">حبة كاملة</button>
           <button class="size-btn" data-price="21">نصف حبة</button>
         </div>
         <div class="menu-item-rice">
@@ -150,7 +129,43 @@
           <label>الكمية:</label>
           <input type="number" min="1" value="1" class="quantity-input">
         </div>
-        <p>السعر: <span class="price">43</span> ر.س</p>
+        <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">0</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">0</span> ر.س</p>
+</div>
+        <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+      </div>
+
+      <!-- صنف 1: مضغوط دجاج -->
+      <div class="menu-item-card">
+        
+        <div class="menu-item-img">
+  <span class="item-label">على الطلب 45 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/مضغوط ابيض.webp" alt="مضغوط دجاج ابيض">
+  <span class="calories">950 cal</span>
+</div>
+       
+        <h3 class="menu-item-title">مضغوط دجاج ابيض</h3>
+        <div class="menu-item-size">
+          <button class="size-btn active" data-price="42">حبة كاملة</button>
+          <button class="size-btn" data-price="21">نصف حبة</button>
+        </div>
+        <div class="menu-item-rice">
+  <label>اختيار نوع الرز:</label>
+  <select class="rice-select">
+    <option value="" disabled selected hidden>برجاء تحديد نوع الرز</option>
+    <option value="plain">رز مزه حبة طويل</option>
+    <option value="abu-bint">رز أبو بنت</option>
+  </select>
+</div>
+        <div class="menu-item-quantity">
+          <label>الكمية:</label>
+          <input type="number" min="1" value="1" class="quantity-input">
+        </div>
+        <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">0</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">0</span> ر.س</p>
+</div>
         <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
       </div>
       <!-- صنف 2: مظبي دجاج -->
@@ -182,17 +197,20 @@
     <input type="number" min="1" value="1" class="quantity-input">
   </div>
 
-  <p>السعر: <span class="price">40</span> ر.س</p>
-
+  <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">0</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">0</span> ر.س</p>
+</div>
   <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
 </div>
       <!-- صنف 3: دجاج مسلوق -->
       <div class="menu-item-card">
         <div class="menu-item-img">
-          <img src="images/مسلوق.webp" alt="دجاج مسلوق">
-          <span class="calories">3398 cal</span>
-        </div>
-        <h3 class="menu-item-title">دجاج مسلوق</h3>
+  <span class="item-label">على الطلب 40 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/مسلوق.webp" alt=" دجاج مكشن">
+  <span class="calories">3398 cal</span>
+</div>
+        <h3 class="menu-item-title">دجاج مكشن</h3>
         <div class="menu-item-size">
           <button class="size-btn active" data-price="44">حبة كاملة</button>
           <button class="size-btn" data-price="22">نصف حبة</button>
@@ -210,7 +228,10 @@
           <label>الكمية:</label>
           <input type="number" min="1" value="1" class="quantity-input">
         </div>
-        <p>السعر: <span class="price">44</span> ر.س</p>
+        <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">0</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">0</span> ر.س</p>
+</div>
         <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
       </div>
     </div>
@@ -220,9 +241,10 @@
       <!-- صنف جديد: مضغوط لحم حري أبيض -->
 <div class="menu-item-card">
   <div class="menu-item-img">
-    <img src="images/لحم ابيض (1).webp" alt="مضغوط لحم حري أبيض">
-    <span class="calories">1400 cal</span>
-  </div>
+  <span class="item-label">على الطلب 55 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/لحم ابيض (1).webp" alt="مضغوط لحم حري ابيض">
+  <span class="calories">1400 cal</span>
+</div>
   <h3 class="menu-item-title">مضغوط لحم حري أبيض</h3>
   <div class="menu-item-rice">
     <label>اختيار نوع الرز:</label>
@@ -236,15 +258,19 @@
     <label>الكمية:</label>
     <input type="number" min="1" value="1" class="quantity-input">
   </div>
-  <p>السعر: <span class="price">75</span> ر.س</p>
+  <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">75</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">60</span> ر.س</p>
+</div>
   <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
 </div>
       <!-- صنف 1: مضغوط حاشي ابيض -->
       <div class="menu-item-card">
         <div class="menu-item-img">
-          <img src="images/حاشي ابيض (1).webp" alt="مضغوط حاشي ابيض">
-          <span class="calories">1400 cal</span>
-        </div>
+  <span class="item-label">على الطلب 55 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/حاشي ابيض (1).webp" alt="مضغوط حاشي ابيض">
+  <span class="calories">1400 cal</span>
+</div>
         <h3 class="menu-item-title">مضغوط حاشي ابيض</h3>
         <div class="menu-item-rice">
   <label>اختيار نوع الرز:</label>
@@ -258,16 +284,20 @@
           <label>الكمية:</label>
           <input type="number" min="1" value="1" class="quantity-input">
         </div>
-        <p>السعر: <span class="price">60</span> ر.س</p>
+        <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">60</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">48</span> ر.س</p>
+</div>
         <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
       </div>
       
        <!-- صنف 1: نفر مضغوط حاشي -->
       <div class="menu-item-card">
         <div class="menu-item-img">
-          <img src="images/حاشي.webp" alt="نفر مضغوط حاشي">
-          <span class="calories">1400 cal</span>
-        </div>
+  <span class="item-label">على الطلب 55 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/حاشي.webp" alt="مضغوط لحم حري ابيض">
+  <span class="calories">1400 cal</span>
+</div>
         <h3 class="menu-item-title">نفر مضغوط حاشي</h3>
         <div class="menu-item-rice">
   <label>اختيار نوع الرز:</label>
@@ -281,15 +311,19 @@
           <label>الكمية:</label>
           <input type="number" min="1" value="1" class="quantity-input">
         </div>
-        <p>السعر: <span class="price">60</span> ر.س</p>
+       <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">60</span> ر.س</p>
+  <p class="new-price">السعر : <span class="price">48</span> ر.س</p>
+</div>
         <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
       </div>
       <!-- صنف 2: مضغوط لحم حري -->
       <div class="menu-item-card">
         <div class="menu-item-img">
-          <img src="images/لحم غنم.webp" alt="مضغوط لحم حري">
-          <span class="calories">1400 cal</span>
-        </div>
+  <span class="item-label">على الطلب 55 دقيقة</span>   <!-- النص اللي فوق الصورة -->
+  <img src="images/لحم غنم.webp" alt="مضغوط لحم حري ابيض">
+  <span class="calories">1400 cal</span>
+</div>
         <h3 class="menu-item-title">مضغوط لحم حري</h3>
         <div class="menu-item-rice">
   <label>اختيار نوع الرز:</label>
@@ -303,7 +337,10 @@
           <label>الكمية:</label>
           <input type="number" min="1" value="1" class="quantity-input">
         </div>
-        <p>السعر: <span class="price">75</span> ر.س</p>
+       <div class="menu-item-price">
+  <p class="old-price">قبل الخصم: <span class="old-price-value">75</span> ر.س</p>
+  <p class="new-price">السعر: <span class="price">60</span> ر.س</p>
+</div>
         <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
       </div>
     </div>
@@ -420,6 +457,20 @@
       </div>
       <!-- الأصناف كما أرسلتها -->
       <!-- ... ضع الأصناف الجانبية هنا ... -->
+       <!-- صنف 6: كنافة قشطة -->
+        <div class="menu-item-card">
+          <div class="menu-item-img">
+            <img src="images/تبسي.png" alt="كنافة قشطة">
+            
+          </div>
+          <h3 class="menu-item-title">صحن تبسي</h3>
+          <div class="menu-item-quantity">
+            <label>الكمية:</label>
+            <input type="number" min="1" value="1" class="quantity-input">
+          </div>
+          <p>السعر: <span class="price">7</span> ر.س</p>
+          <button class="add-to-cart">إضافة إلى سلة مشترياتك</button>
+        </div>
        
     </div>
 
@@ -577,6 +628,7 @@
     <a href="#" target="_blank"><img src="images/381979.svg" alt="تو يو" style="--i:3;"></a>
     <a href="#" target="_blank"><img src="images/marsol.png" alt="مرسول" style="--i:4;"></a>
     <a href="#" target="_blank"><img src="images/كود-خصم-نون-فود-Noon-Food-logo.png" alt="نون فوده" style="--i:5;"></a>
+    <a href="#" target="_blank"><img src="images/ninja.png" alt="نون فوده" style="--i:5;"></a>
   </div>
 </div>
 
@@ -584,7 +636,7 @@
 
   <!-- حقوق الملكية -->
   <div class="footer-bottom">
-    <p>© 2025 مطعم صمّام. جميع الحقوق محفوظة.</p>
+    <p>© 2025  صمّام. جميع الحقوق محفوظة.</p>
   </div>
 </footer>
 

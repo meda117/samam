@@ -103,45 +103,63 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   if (!priceEl) return;
 
   // حفظ السعر الأساسي
-  let basePrice = parseFloat(priceEl.dataset.base || priceEl.textContent) || 0;
-  priceEl.dataset.base = basePrice;
-
-  const updatePrice = () => {
-    let selectedPrice = basePrice;
-    const activeSize = card.querySelector('.size-btn.active');
-    let riceExtra = 0;
+let basePrice = parseFloat(priceEl.dataset.base || priceEl.textContent) || 0;
+priceEl.dataset.base = basePrice;
+// لو مفيش مقاسات (الأصناف الكبيرة مثل الحاشي واللحم)
+if (!card.querySelector('.size-btn')) {
     let qty = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+    let base = parseFloat(priceEl.dataset.base || priceEl.textContent) || 0;
 
-    // فقط للأصناف الثلاثة نطبق تعديل السادة والأرز
-if (["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) && activeSize) {
-  if (riceSelect) {
-    if (riceSelect.value === "plain") {
-      // أسعار السادة
-      if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
-      if (title === "دجاج مسلوق") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
-      if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
-      if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
+    // تحديث السعر
+    priceEl.textContent = (base * qty).toFixed(1);
+    return; // وقف بقية الحسابات.. دا صنف بدون مقاسات
+}
+const updatePrice = () => {
+  let selectedPrice = basePrice;
+  const activeSize = card.querySelector('.size-btn.active');
+  let riceExtra = 0;
+  let qty = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-    } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج") {
-      selectedPrice = activeSize.textContent.includes("نصف") ? 21: 43;
-      riceExtra = activeSize.textContent.includes("نصف") ? 0.5 : 1;
+  // فقط للأصناف المعينة نطبق تعديل السادة والأرز
+  if (["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) && activeSize) {
 
-    } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج ابيض") {
-      selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 43;
-      riceExtra = activeSize.textContent.includes("نصف") ? 0.5 : 1;
+    if (riceSelect) {
 
-    } else {
-      selectedPrice = parseFloat(activeSize.dataset.price);
+      if (riceSelect.value === "plain") {
+        if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
+        if (title === "دجاج مسلوق") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
+        if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+
+      } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج") {
+        selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
+
+      } else if (riceSelect.value === "abu-bint" && title === "مضغوط دجاج ابيض") {
+        selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
+
+      } else {
+        selectedPrice = parseFloat(activeSize.dataset.price);
+      }
     }
+
+  } else if (activeSize && activeSize.dataset.price) {
+    selectedPrice = parseFloat(activeSize.dataset.price);
   }
 
-} else if (activeSize && activeSize.dataset.price) {
-  selectedPrice = parseFloat(activeSize.dataset.price);
-}
+  // ⭐⭐⭐ تطبيق خصم 20% ⭐⭐⭐
+  let oldPrice = selectedPrice + riceExtra;       // السعر قبل الخصم
+  let newPrice = (oldPrice * 0.8).toFixed(2);     // السعر بعد الخصم
 
+  // تحديث الواجهة
+  let oldPriceEl = card.querySelector('.old-price-value');
+  let newPriceEl = card.querySelector('.price');
 
-
-priceEl.textContent = ((selectedPrice + riceExtra) * qty).toFixed(2);
+  if (oldPriceEl && newPriceEl) {
+    oldPriceEl.textContent = oldPrice;
+    newPriceEl.textContent = newPrice;
+  }
 };
 
   // تشغيل التحديث مبدئياً وربط المستمعين للتحديث عند تغيير الكمية أو الرز أو الحجم

@@ -1234,7 +1234,7 @@ body {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .delivery-icons img {
@@ -1305,8 +1305,8 @@ body {
 
   .footer-social a img,
   .delivery-icons img {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
   }
 
   
@@ -1428,4 +1428,43 @@ body {
         font-size: 16px !important;
         padding: 10px 22px !important;
     }
+}
+.logo-img {
+  height: 150px;   /* نفس ارتفاع كلمة SAMAM تقريبًا */
+  object-fit: contain;
+  margin-top: 14px;
+}
+.menu-item-img {
+  position: relative;
+}
+
+.item-label {
+  position: absolute;
+  top: 10px;          /* المسافة من فوق */
+  left: 10px;         /* ← على شمال الصورة */
+  background: #d32f2f;
+  color: #fff;
+  padding: 5px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  z-index: 10;
+  font-weight: bold;
+  white-space: nowrap;  /* يخليها ما تتكسر على الشاشات الصغيرة */
+}
+.menu-item-price {
+  margin-top: 10px;
+}
+
+.old-price {
+  color: red;
+  text-decoration: line-through;
+  font-size: 14px;
+  margin: 0;
+}
+
+.new-price {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
 }
