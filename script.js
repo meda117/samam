@@ -94,51 +94,63 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ======================== تحديث السعر حسب الحجم والرز والكمية ======================== */
 document.querySelectorAll('.menu-item-card').forEach(card => {
   const priceEl = card.querySelector('.price');
-  const quantityInput = card.querySelector('.quantity-input');
+  const quantityEl = card.querySelector('.quantity-input'); // span
+  const plusBtn = card.querySelector('.plus');
+  const minusBtn = card.querySelector('.minus');
   const riceSelect = card.querySelector('.rice-select');
   const sizeBtns = card.querySelectorAll('.size-btn');
   const titleEl = card.querySelector('.menu-item-title');
   const title = titleEl ? titleEl.textContent.trim() : '';
 
-  if (!priceEl) return;
+  if (!priceEl || !quantityEl) return;
 
   // حفظ السعر الأساسي
   let basePrice = parseFloat(priceEl.dataset.base || priceEl.textContent) || 0;
   priceEl.dataset.base = basePrice;
 
-  // ================= صنف بدون مقاسات =================
+  /* ================= صنف بدون مقاسات ================= */
   if (!card.querySelector('.size-btn')) {
     const updateSimplePrice = () => {
-      let qty = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+      let qty = parseInt(quantityEl.textContent) || 1;
       let base = parseFloat(priceEl.dataset.base) || 0;
       priceEl.textContent = (base * qty).toFixed(2);
     };
 
-    if (quantityInput) {
-      quantityInput.addEventListener('input', updateSimplePrice);
-      quantityInput.addEventListener('change', updateSimplePrice);
+    updateSimplePrice();
+
+    if (plusBtn && minusBtn) {
+      plusBtn.addEventListener('click', () => {
+        quantityEl.textContent = (parseInt(quantityEl.textContent) || 1) + 1;
+        updateSimplePrice();
+      });
+
+      minusBtn.addEventListener('click', () => {
+        let q = parseInt(quantityEl.textContent) || 1;
+        if (q > 1) {
+          quantityEl.textContent = q - 1;
+          updateSimplePrice();
+        }
+      });
     }
 
-    updateSimplePrice();
     return;
   }
 
-  // ================= صنف بمقاسات =================
+  /* ================= صنف بمقاسات ================= */
   const updatePrice = () => {
     let selectedPrice = basePrice;
     const activeSize = card.querySelector('.size-btn.active');
     let riceExtra = 0;
-    let qty = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+    let qty = parseInt(quantityEl.textContent) || 1;
 
-    // فقط للأصناف المعينة
     if (
-      ["مظبي دجاج", "دجاج مسلوق", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
+      ["مظبي دجاج", "دجاج مكشن", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
       activeSize
     ) {
       if (riceSelect) {
         if (riceSelect.value === "plain") {
           if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
-          if (title === "دجاج مسلوق") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
+          if (title === "دجاج مكشن") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
           if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
           if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
         } else if (riceSelect.value === "abu-bint") {
@@ -152,13 +164,12 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
       selectedPrice = parseFloat(activeSize.dataset.price);
     }
 
-    /* ⭐⭐⭐ تطبيق الخصم + الكمية ⭐⭐⭐ */
-    let unitPrice = selectedPrice + riceExtra;   // سعر القطعة
-    let discountedUnit = unitPrice * 0.8;       // بعد الخصم
-    let finalPrice = discountedUnit * qty;      // × الكمية
+    let unitPrice = selectedPrice + riceExtra;
+    let discountedUnit = unitPrice * 0.8;
+    let finalPrice = discountedUnit * qty;
 
-    let oldPriceEl = card.querySelector('.old-price-value');
-    let newPriceEl = card.querySelector('.price');
+    const oldPriceEl = card.querySelector('.old-price-value');
+    const newPriceEl = card.querySelector('.price');
 
     if (oldPriceEl && newPriceEl) {
       oldPriceEl.textContent = (unitPrice * qty).toFixed(2);
@@ -166,12 +177,22 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
     }
   };
 
-  // ================= Events =================
+  /* ================= Events ================= */
   updatePrice();
 
-  if (quantityInput) {
-    quantityInput.addEventListener('input', updatePrice);
-    quantityInput.addEventListener('change', updatePrice);
+  if (plusBtn && minusBtn) {
+    plusBtn.addEventListener('click', () => {
+      quantityEl.textContent = (parseInt(quantityEl.textContent) || 1) + 1;
+      updatePrice();
+    });
+
+    minusBtn.addEventListener('click', () => {
+      let q = parseInt(quantityEl.textContent) || 1;
+      if (q > 1) {
+        quantityEl.textContent = q - 1;
+        updatePrice();
+      }
+    });
   }
 
   if (riceSelect) {
@@ -204,18 +225,18 @@ const deliveryFee = 5;
 /* ======================== تحديث الكمية خارج السلة ======================== */
 function updateOutsideQty(title, size, rice, qty) {
   document.querySelectorAll('.menu-item-card').forEach(card => {
-    const titleEl = card.querySelector('.menu-item-title');
-    const cardTitle = titleEl ? titleEl.textContent.trim() : '';
+    const cardTitle = card.querySelector('.menu-item-title')?.textContent.trim();
     const cardSizeEl = card.querySelector('.size-btn.active');
-    const cardSize = cardSizeEl ? cardSizeEl.textContent : '';
-    const riceEl = card.querySelector('.rice-select');
-    const cardRice = riceEl ? (riceEl.value || '') : '';
+    const cardSize = cardSizeEl?.textContent;
+    const cardRice = card.querySelector('.rice-select')?.value || '';
 
     if (cardTitle === title && cardSize === size && cardRice === rice) {
-      const input = card.querySelector('.quantity-input');
-      if (input) {
-        input.value = qty;
-        input.dispatchEvent(new Event('input')); // ⭐ تحديث السعر فورًا
+      const qtyEl = card.querySelector('.quantity-input');
+      if (qtyEl) {
+        qtyEl.textContent = qty;
+
+        // إعادة حساب السعر
+        card.querySelector('.rice-select')?.dispatchEvent(new Event('change'));
       }
     }
   });
@@ -308,31 +329,25 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   const sizeBtns = card.querySelectorAll('.size-btn');
   const riceSelect = card.querySelector('.rice-select');
 
-  // دالة لفحص الاختيارات
   function checkSelections() {
     let allSelected = true;
 
-    // إذا فيه اختيار حجم
     if (sizeBtns.length) {
       const selectedSize = card.querySelector('.size-btn.active');
       if (!selectedSize) allSelected = false;
     }
 
-    // إذا فيه اختيار رز
     if (riceSelect) {
       if (!riceSelect.value) allSelected = false;
     }
 
-    // تفعيل أو تعطيل الزر
     addBtn.disabled = !allSelected;
     addBtn.style.opacity = allSelected ? '1' : '0.5';
     addBtn.style.cursor = allSelected ? 'pointer' : 'not-allowed';
   }
 
-  // تفعيل الزر افتراضيًا حسب الاختيارات
   checkSelections();
 
-  // عند تغيير الحجم
   sizeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       sizeBtns.forEach(b => b.classList.remove('active'));
@@ -341,37 +356,53 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
     });
   });
 
-  // عند تغيير اختيار الرز
   if (riceSelect) {
     riceSelect.addEventListener('change', checkSelections);
   }
 
-  // إضافة للسلة
+  /* ================= إضافة للسلة ================= */
   addBtn.addEventListener('click', () => {
-    if (addBtn.disabled) return; // لا يعمل إذا الاختيارات غير مكتملة
+    if (addBtn.disabled) return;
 
     const titleEl = card.querySelector('.menu-item-title');
-    const qtyInput = card.querySelector('.quantity-input');
+    const qtyInput = card.querySelector('.quantity-input'); // span
     const priceEl = card.querySelector('.price');
 
-    const title = titleEl ? titleEl.textContent : '';
-    const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+    const title = titleEl ? titleEl.textContent.trim() : '';
+
+    // ⭐⭐ التعديل المهم هنا ⭐⭐
+    const qty = qtyInput ? (parseInt(qtyInput.textContent) || 1) : 1;
+
     const totalPriceNow = priceEl ? parseFloat(priceEl.textContent) : 0;
     const unitPrice = qty ? totalPriceNow / qty : totalPriceNow;
+
     const sizeEl = card.querySelector('.size-btn.active');
     const size = sizeEl ? sizeEl.textContent : '';
-    const rice = riceSelect ? (riceSelect.options[riceSelect.selectedIndex]?.text || '') : '';
 
-    const existing = cartSliderItems.find(i => i.title === title && i.size === size && i.rice === rice);
+    const rice = riceSelect
+      ? (riceSelect.options[riceSelect.selectedIndex]?.text || '')
+      : '';
+
+    const existing = cartSliderItems.find(
+      i => i.title === title && i.size === size && i.rice === rice
+    );
+
     if (existing) {
       existing.qty += qty;
       updateOutsideQty(title, size, rice, existing.qty);
     } else {
-      cartSliderItems.push({ title, price: unitPrice, qty, size, rice });
+      cartSliderItems.push({
+        title,
+        price: unitPrice,
+        qty,
+        size,
+        rice
+      });
     }
 
     updateCartUI();
-    // إعادة تعيين الاختيارات (اختياري)
+
+    // إعادة تعيين الاختيارات
     if (riceSelect) riceSelect.value = '';
     if (sizeBtns.length) sizeBtns.forEach(b => b.classList.remove('active'));
     checkSelections();
