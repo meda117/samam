@@ -137,45 +137,65 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   }
 
   /* ================= صنف بمقاسات ================= */
-  const updatePrice = () => {
-    let selectedPrice = basePrice;
-    const activeSize = card.querySelector('.size-btn.active');
-    let riceExtra = 0;
-    let qty = parseInt(quantityEl.textContent) || 1;
+const updatePrice = () => {
+  let selectedPrice = basePrice;
+  const activeSize = card.querySelector('.size-btn.active');
+  let riceExtra = 0;
+  let qty = parseInt(quantityEl.textContent) || 1;
 
-    if (
-      ["مظبي دجاج", "دجاج مكشن", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
-      activeSize
-    ) {
-      if (riceSelect) {
-        if (riceSelect.value === "plain") {
-          if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
-          if (title === "دجاج مكشن") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
-          if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
-          if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
-        } else if (riceSelect.value === "abu-bint") {
-          riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
-          selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
-        } else {
-          selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
-        }
+  /* ===== كبسة المكرونة بالدجاج (خصم فعلي 10%) ===== */
+if (title === "كبسة المكرونة بالدجاج") {
+  const oldPriceEl = card.querySelector('.old-price-value');
+  const newPriceEl = card.querySelector('.price');
+
+  let base = parseFloat(oldPriceEl?.textContent) || 0;
+  let qty = parseInt(quantityEl.textContent) || 1;
+
+  let discountedUnit = base * 0.9; // خصم 10%
+  let finalPrice = discountedUnit * qty;
+
+  if (oldPriceEl && newPriceEl) {
+    oldPriceEl.textContent = (base * qty).toFixed(2);
+    newPriceEl.textContent = finalPrice.toFixed(2);
+  }
+
+  return; // يمنع دخوله في أي حسابات تانية
+}
+
+  /* ===== أصناف بمقاسات ===== */
+  if (
+    ["مظبي دجاج", "دجاج مكشن", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
+    activeSize
+  ) {
+    if (riceSelect) {
+      if (riceSelect.value === "plain") {
+        if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
+        if (title === "دجاج مكشن") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
+        if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+      } else if (riceSelect.value === "abu-bint") {
+        riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
+        selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+      } else {
+        selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
       }
-    } else if (activeSize && activeSize.dataset.price) {
-      selectedPrice = parseFloat(activeSize.dataset.price);
     }
+  } else if (activeSize && activeSize.dataset.price) {
+    selectedPrice = parseFloat(activeSize.dataset.price);
+  }
 
-    let unitPrice = selectedPrice + riceExtra;
-    let discountedUnit = unitPrice * 0.8;
-    let finalPrice = discountedUnit * qty;
+  let unitPrice = selectedPrice + riceExtra;
+  let discountedUnit = unitPrice * 0.9;
+  let finalPrice = discountedUnit * qty;
 
-    const oldPriceEl = card.querySelector('.old-price-value');
-    const newPriceEl = card.querySelector('.price');
+  const oldPriceEl = card.querySelector('.old-price-value');
+  const newPriceEl = card.querySelector('.price');
 
-    if (oldPriceEl && newPriceEl) {
-      oldPriceEl.textContent = (unitPrice * qty).toFixed(2);
-      newPriceEl.textContent = finalPrice.toFixed(2);
-    }
-  };
+  if (oldPriceEl && newPriceEl) {
+    oldPriceEl.textContent = (unitPrice * qty).toFixed(2);
+    newPriceEl.textContent = finalPrice.toFixed(2);
+  }
+};
 
   /* ================= Events ================= */
   updatePrice();
