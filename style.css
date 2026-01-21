@@ -1500,18 +1500,19 @@ body {
   font-weight: bold;
 }
 .hero-services {
-  position: absolute; /* مهم عشان ما يتحركش مع transform */
-  bottom: 50px;       /* تحكم في ارتفاعه من أسفل الهيرو */
+  position: absolute;
+  bottom: 50px; /* ارتفاع افتراضي على الديسكتوب */
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
   z-index: 12;
+  max-width: 90%; /* يمنع النص من تجاوز الشاشة */
 }
 
 .hero-services p {
   color: #fdf2d4;
-  font-size: 25px;
-  line-height: 1.6;
+  font-size: 20px;
+  line-height: 1.4;
   margin-bottom: 8px;
 }
 
@@ -1519,9 +1520,9 @@ body {
   display: inline-block;
   background: #a81534;
   color: #fff;
-  padding: 8px 18px;
+  padding: 8px 16px; /* أقل شوي للموبايل */
   border-radius: 25px;
-  font-size: 18x;
+  font-size: 17px;
   font-weight: bold;
   text-decoration: none;
   transition: all 0.3s ease;
@@ -1530,4 +1531,20 @@ body {
 .hero-services a:hover {
   background: #1ebe5d;
   transform: scale(1.05);
+}
+
+/* ======== Responsive للموبايل ======== */
+@media screen and (max-width: 768px) {
+  .hero-services {
+    bottom: 30px;       /* أقل ارتفاع للشاشات الصغيرة */
+  }
+  
+  .hero-services p {
+    font-size: 14px;    /* نص أصغر للموبايل */
+  }
+  
+  .hero-services a {
+    padding: 6px 14px;  /* زر أصغر يناسب الموبايل */
+    font-size: 13px;
+  }
 }
