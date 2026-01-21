@@ -151,7 +151,7 @@ if (title === "كبسة المكرونة بالدجاج") {
   let base = parseFloat(oldPriceEl?.textContent) || 0;
   let qty = parseInt(quantityEl.textContent) || 1;
 
-  let discountedUnit = base * 0.9; // خصم 10%
+  let discountedUnit = base * 0.8; // خصم 10%
   let finalPrice = discountedUnit * qty;
 
   if (oldPriceEl && newPriceEl) {
@@ -185,7 +185,7 @@ if (title === "كبسة المكرونة بالدجاج") {
   }
 
   let unitPrice = selectedPrice + riceExtra;
-  let discountedUnit = unitPrice * 0.9;
+  let discountedUnit = unitPrice * 0.8;
   let finalPrice = discountedUnit * qty;
 
   const oldPriceEl = card.querySelector('.old-price-value');
