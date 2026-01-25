@@ -1511,7 +1511,7 @@ body {
 
 .hero-services p {
   color: #fdf2d4;
-  font-size: 20px;
+  font-size: 30px;
   line-height: 1.4;
   margin-bottom: 8px;
 }
@@ -1546,5 +1546,27 @@ body {
   .hero-services a {
     padding: 6px 14px;  /* زر أصغر يناسب الموبايل */
     font-size: 13px;
+  }
+}
+/* ===== شريط أسود شفاف بعرض الشاشة ===== */
+.hero-services {
+  width: 100vw;              /* عرض الشاشة */
+  padding: 14px 0;           /* ارتفاع الشريط */
+  background: rgba(71, 38, 38, 0.6);
+}
+
+/* تكبير بسيط للنص */
+.hero-services p {
+  font-size: 30px;
+}
+
+/* ===== موبايل ===== */
+@media screen and (max-width: 768px) {
+  .hero-services {
+    padding: 10px 0;
+  }
+
+  .hero-services p {
+    font-size: 16px;
   }
 }
