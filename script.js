@@ -171,11 +171,11 @@ if (title === "كبسة المكرونة بالدجاج") {
       if (riceSelect.value === "plain") {
         if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
         if (title === "دجاج مكشن") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
-        if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
-        if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
+        if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
       } else if (riceSelect.value === "abu-bint") {
         riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
-        selectedPrice = activeSize.textContent.includes("نصف") ? 21 : 42;
+        selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
       } else {
         selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
       }
