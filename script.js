@@ -137,65 +137,40 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   }
 
   /* ================= صنف بمقاسات ================= */
-const updatePrice = () => {
-  let selectedPrice = basePrice;
-  const activeSize = card.querySelector('.size-btn.active');
-  let riceExtra = 0;
-  let qty = parseInt(quantityEl.textContent) || 1;
+  const updatePrice = () => {
+    let selectedPrice = basePrice;
+    const activeSize = card.querySelector('.size-btn.active');
+    let riceExtra = 0;
+    let qty = parseInt(quantityEl.textContent) || 1;
 
-  /* ===== كبسة المكرونة بالدجاج (خصم فعلي 10%) ===== */
-if (title === "كبسة المكرونة بالدجاج") {
-  const oldPriceEl = card.querySelector('.old-price-value');
-  const newPriceEl = card.querySelector('.price');
-
-  let base = parseFloat(oldPriceEl?.textContent) || 0;
-  let qty = parseInt(quantityEl.textContent) || 1;
-
-  let discountedUnit = base * 0.8; // خصم 10%
-  let finalPrice = discountedUnit * qty;
-
-  if (oldPriceEl && newPriceEl) {
-    oldPriceEl.textContent = (base * qty).toFixed(2);
-    newPriceEl.textContent = finalPrice.toFixed(2);
-  }
-
-  return; // يمنع دخوله في أي حسابات تانية
-}
-
-  /* ===== أصناف بمقاسات ===== */
-  if (
-    ["مظبي دجاج", "دجاج مكشن", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
-    activeSize
-  ) {
-    if (riceSelect) {
-      if (riceSelect.value === "plain") {
-        if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
-        if (title === "دجاج مكشن") selectedPrice = activeSize.textContent.includes("نصف") ? 16 : 32;
-        if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
-        if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
-      } else if (riceSelect.value === "abu-bint") {
-        riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
-        selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
-      } else {
-        selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
+    /* ===== أصناف بمقاسات الدجاج بدون دجاج مكشن ===== */
+    if (
+      ["مظبي دجاج", "مضغوط دجاج", "مضغوط دجاج ابيض"].includes(title) &&
+      activeSize
+    ) {
+      if (riceSelect) {
+        if (riceSelect.value === "plain") {
+          if (title === "مظبي دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 15 : 30;
+          if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
+          if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
+        } else if (riceSelect.value === "abu-bint") {
+          riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
+          selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
+        } else {
+          selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
+        }
       }
+    } else if (activeSize && activeSize.dataset.price) {
+      selectedPrice = parseFloat(activeSize.dataset.price);
     }
-  } else if (activeSize && activeSize.dataset.price) {
-    selectedPrice = parseFloat(activeSize.dataset.price);
-  }
 
-  let unitPrice = selectedPrice + riceExtra;
-  let discountedUnit = unitPrice * 0.8;
-  let finalPrice = discountedUnit * qty;
+    let unitPrice = selectedPrice + riceExtra;
+    let finalPrice = unitPrice * qty;
 
-  const oldPriceEl = card.querySelector('.old-price-value');
-  const newPriceEl = card.querySelector('.price');
-
-  if (oldPriceEl && newPriceEl) {
-    oldPriceEl.textContent = (unitPrice * qty).toFixed(2);
-    newPriceEl.textContent = finalPrice.toFixed(2);
-  }
-};
+    const oldPriceEl = card.querySelector('.old-price-value');
+    if (oldPriceEl) oldPriceEl.textContent = finalPrice.toFixed(2);
+    priceEl.textContent = finalPrice.toFixed(2);
+  };
 
   /* ================= Events ================= */
   updatePrice();
@@ -497,7 +472,7 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   }
 
   
-  /* ======================== إرسال الطلب على واتساب ======================== */
+ /* ======================== إرسال الطلب على واتساب ======================== */
 if (sendOrderBtn) {
   sendOrderBtn.addEventListener('click', () => {
 
@@ -514,12 +489,16 @@ if (sendOrderBtn) {
 
     // جمع بيانات المنتجات
     cartSliderItems.forEach(item => {
-      const riceText = item.rice ? item.rice : "-";
       const sizeText = item.size ? item.size : "-";
       const itemTotal = item.price * item.qty;
 
       message += `(${sizeText} ${item.title})\n`;
-      message += `نوع الرز: ${riceText}\n`;
+
+      // إضافة نوع الرز فقط إذا موجود
+      if (item.rice && item.rice !== "") {
+        message += `نوع الرز: ${item.rice}\n`;
+      }
+
       message += `الكمية: ${item.qty}\n`;
       message += `السعر: ${itemTotal.toFixed(2)} ر.س\n`;
       message += '-----------------------------\n';
@@ -528,12 +507,12 @@ if (sendOrderBtn) {
     });
 
     // حساب رسوم التوصيل
-let deliveryCharge = 0;
-const deliveryMethodVal = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '';
+    let deliveryCharge = 0;
+    const deliveryMethodVal = deliveryMethod && deliveryMethod.value ? deliveryMethod.value : '';
 
-if (deliveryMethodVal === "توصيل") {
-  deliveryCharge = deliveryFee; // تتطبق على أي سعر
-}
+    if (deliveryMethodVal === "توصيل") {
+      deliveryCharge = deliveryFee; // تتطبق على أي سعر
+    }
 
     const discountAmount = subtotal * (currentDiscount || 0);
     const total = subtotal - discountAmount + deliveryCharge;
