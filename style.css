@@ -1570,13 +1570,12 @@ body {
     font-size: 16px;
   }
 }
-/* خلفية سوداء شفافة */
+/* ================= الإعلان عند فتح الموقع ================= */
+
+/* الخلفية السوداء الشفافة */
 #ad-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
@@ -1587,43 +1586,62 @@ body {
 /* صندوق الإعلان */
 .ad-box {
   position: relative;
-  background: transparent;
-  max-width: 90%;
-  text-align: center;
+  width: 90%;
+  max-width: 500px;
+}
+
+/* حاوية الصورة */
+.ad-image-wrapper {
+  position: relative;
+  width: 100%;
 }
 
 /* صورة الإعلان */
-.ad-box img {
+.ad-image-wrapper img {
   width: 100%;
-  max-height: 80vh;
-  border-radius: 12px;
+  height: auto;
   display: block;
+  border-radius: 14px;
 }
 
 /* زر الإغلاق */
 .close-ad {
   position: absolute;
-  top: -12px;
-  right: -12px;
-  background: #000;
-  color: #fff;
-  border: none;
-  font-size: 22px;
-  width: 36px;
-  height: 36px;
+  top: -14px;
+  right: -14px;
+  width: 45px;
+  height: 40px;
   border-radius: 50%;
+  border: none;
+  background: #cb1616;
+  color: #fff;
+  font-size: 35px;
   cursor: pointer;
+  z-index: 10;
 }
 
-/* زر واتساب */
+/* ================= زر واتساب فوق الصورة ================= */
 .ad-btn {
-  display: inline-block;
-  margin-top: 15px;
-  padding: 12px 30px;
-  background: #b01734;
+  position: absolute;
+
+  /* 🔥 تثبيت الزر في الجزء الفاضي من الصورة */
+  left: 50%;
+  top: 70%;            /* 👈 عدل الرقم ده لو حابب */
+  transform: translateX(-50%);
+
+  padding: 14px 38px;
+  background: #d21d40;
   color: #fff;
   font-size: 16px;
+  font-weight: bold;
   border-radius: 30px;
   text-decoration: none;
-  font-weight: bold;
+  white-space: nowrap;
+
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* لمسة بسيطة عند المرور */
+.ad-btn:hover {
+  background: #1ebe5d;
 }
