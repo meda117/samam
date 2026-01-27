@@ -140,7 +140,7 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
   const updatePrice = () => {
     let selectedPrice = basePrice;
     const activeSize = card.querySelector('.size-btn.active');
-    let riceExtra = 0;
+    let riceExtra = 0; // ✅ الرز مجاني في كل الحالات
     let qty = parseInt(quantityEl.textContent) || 1;
 
     /* ===== أصناف بمقاسات الدجاج بدون دجاج مكشن ===== */
@@ -154,7 +154,6 @@ document.querySelectorAll('.menu-item-card').forEach(card => {
           if (title === "مضغوط دجاج") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
           if (title === "مضغوط دجاج ابيض") selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
         } else if (riceSelect.value === "abu-bint") {
-          riceExtra = activeSize.textContent.includes("نصف") ? 1 : 2;
           selectedPrice = activeSize.textContent.includes("نصف") ? 19.5 : 39;
         } else {
           selectedPrice = parseFloat(activeSize.dataset.price) || basePrice;
