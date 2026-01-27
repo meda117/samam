@@ -585,3 +585,11 @@ if (sendOrderBtn) {
     });
   }
 });
+document.addEventListener("DOMContentLoaded", () => {
+  const adOverlay = document.getElementById("ad-overlay");
+  const closeBtn = document.querySelector(".close-ad");
+
+  closeBtn.addEventListener("click", () => {
+    adOverlay.style.display = "none";
+  });
+});
