@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#9f1d37">
+  <meta name="description" content="اطلب وجبتك المفضلة من مطعم صمّام.">
+  <title>مطعم صمّام</title>
+  <link rel="stylesheet" href="style.css?v=11">
+  <style>
+    /* تكبير الشعارات داخل مساحتها، من دون تغيير ارتفاع الهيدر أو الهيرو. */
+    #siteHeader .brand{width:220px;height:76px;overflow:visible;justify-content:center}
+    #siteHeader #headerLogo{width:200px!important;height:74px;max-height:74px;object-fit:contain}
+    .hero-logo-slot{top:28px;width:min(430px,90vw);height:185px;overflow:visible}
+    #heroLogo{width:350px!important;height:170px!important;max-height:170px!important;object-fit:contain}
+    .hero-content{padding-top:220px}
+    #heroTitle{white-space:nowrap;font-size:clamp(1.2rem,4.5vw,3.1rem);letter-spacing:-.04em;line-height:1.15;margin:4px 0 10px}
+    #heroEyebrow{margin:0 0 18px;font-size:clamp(.76rem,2vw,1rem)}
+    #siteHeader .brand{overflow:hidden}
+    #siteHeader #headerLogo{max-height:none!important}
+    .footer-brand{overflow:visible!important}
+    #footerLogo{display:block!important;height:auto!important;max-height:none!important;max-width:100%;object-fit:contain;margin-inline:auto}
+    @media (max-width:1024px){#siteHeader .brand{width:175px;height:76px}#siteHeader #headerLogo{width:165px!important;height:70px}.hero-logo-slot{top:28px;height:175px}.hero-content{padding-top:205px}#heroLogo{width:300px!important;height:160px!important;max-height:160px!important}.category-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;overflow:visible;padding-bottom:0}.category-tab{min-width:0;white-space:normal;padding:7px 6px;font-size:.78rem;text-align:center}}
+    .size-picker{width:100%;padding:12px;background:#fff8f0;border:1px solid #ead6ca;border-radius:14px;text-align:center}.size-picker-title{margin:0 0 9px;color:#5a363d;font-weight:800;font-size:.88rem}.size-options{justify-content:center;gap:8px}.size-options .choice{display:grid;flex:1 1 118px;min-width:112px;gap:2px;place-items:center;padding:9px 10px;background:#fff;border:1px solid #d9c6bd;border-radius:11px;text-align:center;line-height:1.25;transition:.2s}.size-options .choice strong{font-size:.93rem;color:#38252a}.size-options .choice small{font-size:.8rem;font-weight:800;color:#a35a42}.size-options .choice:hover,.size-options .choice.selected{border-color:#8f1832;background:#fff1f3;box-shadow:0 3px 10px rgba(143,24,50,.1)}.size-options .choice.selected strong{color:#8f1832}.product-price{min-height:28px;display:flex;align-items:center}:root{--sticky-announcement-height:0px}.announcement{position:sticky!important;top:0;z-index:50}.site-header{top:var(--sticky-announcement-height)!important;z-index:40}.announcement.is-static{white-space:normal;text-align:center}.announcement.is-static span{animation:none!important;transform:none!important;min-width:0!important}
+    @media (max-width:540px){#siteHeader .brand{width:160px;height:70px}#siteHeader #headerLogo{width:150px!important;height:66px}.hero-logo-slot{top:20px;height:150px}.hero-content{padding-top:168px}#heroLogo{width:260px!important;height:140px!important;max-height:140px!important}#heroTitle{font-size:clamp(1.14rem,5.7vw,1.65rem)}#heroEyebrow{margin-bottom:14px}.category-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.category-tab{font-size:.72rem;padding:6px 4px}.size-picker{padding:10px}.size-options .choice{min-width:calc(50% - 5px);flex-basis:calc(50% - 5px)}}
+  </style>
+  <script src="restaurant-data.js?v=13" defer></script>
+  <script src="script.js?v=23" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#menu">تخطَّ إلى القائمة</a>
+  <div id="announcement" class="announcement" hidden></div>
+
+  <header class="site-header" id="siteHeader">
+    <button class="mobile-menu-button" data-action="toggle-mobile-menu" aria-label="فتح القائمة" aria-controls="mobileMenu">☰</button>
+    <a class="brand" href="#top" aria-label="العودة للرئيسية">
+      <img id="headerLogo" src="images/SAMAM HEADER.png" alt="مطعم صمّام">
+    </a>
+    <nav class="desktop-nav" aria-label="التنقل الرئيسي">
+      <a href="#top">الرئيسية</a>
+      <a href="#about" data-action="toggle-about">من نحن</a>
+      <a href="#menu">القائمة</a>
+      <a href="#contact">تواصل معنا</a>
+    </nav>
+    <button class="cart-button" data-action="open-cart" aria-label="فتح سلة الطلبات">
+      <span class="cart-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 1.9-1.4L21 8H6.1"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></span><span class="cart-label">السلة</span><b id="cartCount">0</b>
+    </button>
+  </header>
+  <nav class="mobile-menu" id="mobileMenu" aria-label="قائمة الجوال">
+    <div class="mobile-menu-head"><span>القائمة</span><button data-action="close-mobile-menu" aria-label="إغلاق القائمة">×</button></div>
+    <a href="#top" data-action="close-mobile-menu">الرئيسية</a>
+    <a href="#about" data-action="toggle-about">من نحن</a>
+    <a href="#menu" data-action="close-mobile-menu">قائمة الطعام</a>
+    <a href="#contact" data-action="close-mobile-menu">تواصل معنا</a>
+  </nav>
+  <div class="mobile-menu-backdrop" data-action="close-mobile-menu"></div>
+
+  <main id="top">
+    <section class="hero" id="hero">
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <div class="hero-logo-slot"><img id="heroLogo" class="hero-logo" src="images/logo-p.png" alt="شعار مطعم صمّام"></div>
+        <h1 id="heroTitle">مضغوط وأكثر بطعم لا يُنسى</h1>
+        <p class="eyebrow" id="heroEyebrow">نكهة أصيلة • خدمة سريعة</p>
+        <a class="primary-button" href="#menu">اطلب الآن</a>
+      </div>
+      <div class="hero-service" id="heroService"></div>
+    </section>
+
+    <section class="about hidden" id="about" hidden>
+      <div>
+        <p class="section-kicker">قصتنا</p>
+        <h2 id="aboutTitle">من نحن</h2>
+      </div>
+      <p id="aboutText"></p>
+      <div class="about-cards" id="aboutCards"></div>
+    </section>
+
+    <section class="menu-section" id="menu" aria-labelledby="menuTitle">
+      <div class="section-heading">
+        <div><p class="section-kicker" id="menuKicker">اختر ما يناسبك</p><h2 id="menuTitle">قائمة الطعام</h2></div>
+        <button class="text-button" data-action="show-all">عرض الكل</button>
+      </div>
+      <div class="category-tabs" id="categoryTabs" aria-label="أقسام الطعام"></div>
+      <div id="menuGrid" class="menu-grid" aria-live="polite"></div>
+      <p id="emptyMenu" class="empty-state" hidden>لا توجد أصناف متاحة في هذا القسم الآن.</p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="footer-container">
+      <section class="footer-brand"><img id="footerLogo" src="images/logo-p.png" alt="مطعم صمّام"><h3 id="footerName">مطعم صمّام</h3><p id="footerAddress"></p></section>
+      <section class="footer-contact-section"><h3>تواصل معنا</h3><div class="footer-contact" id="footerContact"></div></section>
+      <section class="footer-social-section"><h3>تابعنا</h3><div class="footer-social" id="footerSocial"></div></section>
+      <section class="footer-delivery-section"><h3>تطبيقات التوصيل</h3><div class="delivery-icons" id="footerDelivery"></div></section>
+    </div>
+    <div class="footer-bottom"><span id="footerCopyright"></span></div>
+  </footer>
+
+  <aside class="cart-drawer" id="cartDrawer" aria-label="سلة الطلبات" aria-hidden="true">
+    <div class="drawer-head"><div><p class="section-kicker">طلبك</p><h2>سلة المشتريات</h2></div><button class="icon-button" data-action="close-cart" aria-label="إغلاق">×</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <form class="checkout-form" id="checkoutForm">
+      <label>طريقة الاستلام<select id="fulfillmentMethod" required></select></label>
+      <p class="method-hint" id="methodHint">اختر طريقة الاستلام لإظهار بيانات الطلب.</p>
+      <fieldset id="customerDetails" hidden disabled>
+        <div id="methodExtraFields"></div>
+        <label>طريقة الدفع<select id="paymentMethod" required></select></label>
+        <label>الاسم<input id="customerName" required autocomplete="name" placeholder="الاسم الكامل"></label>
+        <label>رقم الجوال<input id="customerPhone" required inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx"></label>
+        <div class="coupon-row"><input id="couponInput" autocomplete="off" placeholder="كود الخصم"><button type="button" data-action="apply-coupon">تطبيق</button></div>
+        <p class="form-message" id="couponMessage" aria-live="polite"></p>
+      </fieldset>
+    </form>
+    <div class="cart-summary" id="cartSummary"></div>
+    <button class="checkout-button" data-action="send-order">إرسال الطلب عبر واتساب</button>
+  </aside>
+  <div class="drawer-backdrop" id="drawerBackdrop" data-action="close-cart"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
