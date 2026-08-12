@@ -8,16 +8,18 @@
   <link rel="stylesheet" href="admin.css?v=12">
   <style>#loginGate[hidden]{display:none!important}#adminMain .field input.switch{appearance:none;width:43px!important;height:23px!important;min-width:43px!important;padding:0!important;border:0!important;flex:0 0 43px!important}@media(max-width:620px){html,body,.admin-shell,.admin-content{max-width:100%;overflow-x:hidden}.sidebar{width:min(230px,76vw);gap:8px;padding:12px 8px;overflow-y:auto;scrollbar-width:none}.sidebar::-webkit-scrollbar{display:none}.admin-brand{gap:5px;padding:0 5px;font-size:.84rem}.admin-brand img{width:48px;height:38px}.sidebar nav{gap:1px}.nav-item{padding:7px 8px;font-size:.77rem;line-height:1.25}.nav-item span{width:20px;font-size:.85rem}.view-store{margin-top:6px;padding:7px;font-size:.72rem}#adminMain{padding:16px 11px 34px}.admin-header{padding:11px 12px;min-height:64px}.admin-header h1{font-size:1.05rem}.page-intro{margin-bottom:14px}.page-intro h2{font-size:1.18rem}.page-intro p{font-size:.78rem}.settings-grid,.field-grid{gap:10px}.panel{padding:13px;border-radius:11px}.panel h3{font-size:.95rem}.field{font-size:.76rem}.field input,.field textarea,.field select{padding:8px;font-size:.83rem}.switch-row{padding:7px 0;font-size:.8rem}.switch-row small{font-size:.7rem}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-card{padding:11px}.quick-actions{gap:8px}.quick-action{padding:10px;font-size:.8rem}}</style>
   <style>body input.switch{appearance:none!important;display:inline-block!important;width:43px!important;min-width:43px!important;max-width:43px!important;height:23px!important;min-height:23px!important;max-height:23px!important;margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important;vertical-align:middle!important;flex:0 0 43px!important;justify-self:start!important}</style>
-  <script src="restaurant-data.js?v=13" defer></script>
-  <script src="admin-enhancements.js?v=13" defer></script>
-  <script src="admin.js?v=12" defer></script>
+  <script src="firebase-config.js?v=1" defer></script>
+  <script src="restaurant-data.js?v=14" defer></script>
+  <script src="admin-enhancements.js?v=14" defer></script>
+  <script src="admin.js?v=13" defer></script>
 </head>
 <body>
   <section class="login-gate" id="loginGate" hidden>
     <form id="loginForm" class="login-card">
       <img src="images/logo p.png" alt="مطعم صمّام">
       <h1>دخول لوحة التحكم</h1>
-      <p>أدخل كلمة مرور الإدارة الموجودة في ملف <code>api.php</code>.</p>
+      <p>سجّل الدخول بحساب الأدمن الذي أنشأته في Firebase.</p>
+      <label>البريد الإلكتروني<input name="email" type="email" required autocomplete="email"></label>
       <label>كلمة المرور<input name="password" type="password" required autocomplete="current-password"></label>
       <p class="login-message" id="loginMessage"></p>
       <button class="primary" type="submit">دخول</button>

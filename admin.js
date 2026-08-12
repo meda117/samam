@@ -6,7 +6,6 @@
   let productFilter = 'all';
   let editorProduct = null;
   let editorCoupon = null;
-  let offlineAdminMode = false;
   const $ = (selector) => document.querySelector(selector);
   const esc = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   const activeItems = (items) => (items || []).filter((item) => item.active !== false);
@@ -18,13 +17,12 @@
     if (announcementMoving) state.announcement.moving = announcementMoving.checked;
     window.SamamData.setState(state);
     $('#saveStatus').textContent = 'جارٍ الحفظ...';
-    if (offlineAdminMode) { $('#saveStatus').textContent = 'محفوظ محليًا'; toast(message); return; }
     window.SamamData.save(state).then((result) => {
-      $('#saveStatus').textContent = result.local ? 'محفوظ محليًا — ارفع على استضافة PHP للحفظ العام' : 'تم الحفظ على الخادم';
+      $('#saveStatus').textContent = result.remote ? 'تم الحفظ لكل الأجهزة' : 'تم الحفظ';
       toast(message);
     }).catch((error) => {
-      $('#saveStatus').textContent = 'تعذر الحفظ على الخادم';
-      toast(error.status === 401 ? 'انتهت جلسة الدخول، أعد تحميل الصفحة وسجّل الدخول.' : 'تم الحفظ محليًا فقط؛ تحقق من إعدادات api.php.');
+      $('#saveStatus').textContent = 'تعذر الحفظ في Firebase';
+      toast(error.code === 'auth/required' ? 'سجّل الدخول بحساب الأدمن قبل الحفظ.' : 'تعذر الحفظ. تحقق من إعدادات Firebase وقواعد قاعدة البيانات.');
     });
   }
   function categoryName(id) { return state.categories.find((category) => category.id === id)?.name || id; }
@@ -213,7 +211,21 @@
 
   document.addEventListener('submit', async (event) => {
     const form = event.target;
-    if (form.id === 'loginForm') { event.preventDefault(); const message = $('#loginMessage'); const password = form.elements.password.value; try { await window.SamamData.login(password); $('#loginGate').hidden = true; render(); } catch (_) { if (password === '123456') { offlineAdminMode = true; $('#loginGate').hidden = true; render(); toast('تم فتح اللوحة محليًا. للحفظ على الإنترنت استخدم استضافة PHP.'); } else { message.textContent = 'كلمة المرور غير صحيحة أو الخادم غير متاح.'; } } return; }
+    if (form.id === 'loginForm') {
+      event.preventDefault();
+      const message = $('#loginMessage');
+      const email = form.elements.email.value.trim();
+      const password = form.elements.password.value;
+      try {
+        await window.SamamData.login(email, password);
+        message.textContent = '';
+        $('#loginGate').hidden = true;
+        render();
+      } catch (_) {
+        message.textContent = 'تعذر تسجيل الدخول. راجع البريد وكلمة المرور وإعدادات Firebase.';
+      }
+      return;
+    }
     if (!form.matches('#productForm,#couponForm,#riceForm,#editRiceForm,#fulfillmentForm,#contentForm,#advancedForm')) return;
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -244,13 +256,12 @@
   window.addEventListener('storage', (event) => { if (event.key === window.SamamData.STORAGE_KEY) render(); });
   document.addEventListener('DOMContentLoaded', async () => {
     await window.SamamData.load();
-    if (window.SamamData.serverAvailable) {
-      try { await window.SamamData.login('123456'); }
-      catch (_) { offlineAdminMode = true; }
-    } else {
-      offlineAdminMode = true;
-    }
-    $('#loginGate').hidden = true;
-    render();
+    const authenticated = await window.SamamData.session();
+    $('#loginGate').hidden = !authenticated;
+    if (authenticated) render();
+    await window.SamamData.onAuthChange((user) => {
+      $('#loginGate').hidden = Boolean(user);
+      if (user) { state = getState(); render(); }
+    });
   });
 })();

@@ -149,6 +149,7 @@
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   }
 
+  /* Legacy PHP transport retained for reference only; Firebase is used below.
   let serverAvailable = false;
   async function api(action, options = {}) {
     if (window.location.port === '5500') throw new Error('Live Server لا يشغّل PHP.');
@@ -176,4 +177,105 @@
   async function uploadImage(file) { const form = new FormData(); form.append('image', file); const result = await api('upload', { method: 'POST', body: form }); return result.path; }
 
   window.SamamData = { STORAGE_KEY, CART_KEY, defaultState, copy, getState, setState, resetState, money, uid, normalize, load, save, login, session, uploadImage, get serverAvailable() { return serverAvailable; } };
+  */
+
+  let serverAvailable = false;
+  let firebaseContext = null;
+  let firebaseStateUnsubscribe = null;
+
+  async function ensureFirebase() {
+    if (firebaseContext) return firebaseContext;
+    const config = window.SamamFirebaseConfig;
+    if (!config?.firebase?.apiKey || !config?.firebase?.databaseURL) throw new Error('Firebase configuration is missing.');
+    const [appSdk, databaseSdk, authSdk, functionsSdk] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js'),
+      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js')
+    ]);
+    const app = appSdk.initializeApp(config.firebase);
+    firebaseContext = {
+      config, databaseSdk, authSdk, functionsSdk,
+      database: databaseSdk.getDatabase(app),
+      auth: authSdk.getAuth(app),
+      functions: functionsSdk.getFunctions(app, config.functionsRegion || 'asia-southeast1')
+    };
+    return firebaseContext;
+  }
+
+  async function load() {
+    try {
+      const context = await ensureFirebase();
+      const stateReference = context.databaseSdk.ref(context.database, 'restaurantState');
+      const snapshot = await context.databaseSdk.get(stateReference);
+      serverAvailable = true;
+      if (snapshot.exists() && snapshot.val()?.products && snapshot.val()?.business) setState(snapshot.val());
+      if (!firebaseStateUnsubscribe) {
+        firebaseStateUnsubscribe = context.databaseSdk.onValue(stateReference, (nextSnapshot) => {
+          const nextState = nextSnapshot.val();
+          if (nextState?.products && nextState?.business) setState(nextState);
+        }, () => { serverAvailable = false; });
+      }
+    } catch (_) { serverAvailable = false; }
+    return getState();
+  }
+
+  async function save(state) {
+    const normalized = normalize(state);
+    setState(normalized);
+    const context = await ensureFirebase();
+    if (!context.auth.currentUser) {
+      const error = new Error('يجب تسجيل دخول الأدمن قبل الحفظ.');
+      error.code = 'auth/required';
+      throw error;
+    }
+    await context.databaseSdk.set(context.databaseSdk.ref(context.database, 'restaurantState'), normalized);
+    serverAvailable = true;
+    return { remote: true };
+  }
+
+  async function waitForAuth(context) {
+    if (context.auth.currentUser) return context.auth.currentUser;
+    return new Promise((resolve) => {
+      const unsubscribe = context.authSdk.onAuthStateChanged(context.auth, (user) => { unsubscribe(); resolve(user); });
+    });
+  }
+
+  async function login(email, password) {
+    const context = await ensureFirebase();
+    const credential = await context.authSdk.signInWithEmailAndPassword(context.auth, email, password);
+    serverAvailable = true;
+    return credential.user;
+  }
+  async function logout() { const context = await ensureFirebase(); return context.authSdk.signOut(context.auth); }
+  async function session() { try { return Boolean(await waitForAuth(await ensureFirebase())); } catch (_) { return false; } }
+  async function onAuthChange(callback) { const context = await ensureFirebase(); return context.authSdk.onAuthStateChanged(context.auth, callback); }
+
+  async function uploadImage(file) {
+    if (!file || !String(file.type || '').startsWith('image/')) throw new Error('اختر ملف صورة صالحًا.');
+    if (file.size > 5 * 1024 * 1024) throw new Error('أقصى حجم للصورة هو 5 ميجابايت.');
+    const context = await ensureFirebase();
+    if (!context.auth.currentUser) throw new Error('يجب تسجيل دخول الأدمن قبل رفع الصور.');
+    const imageKit = context.config.imageKit || {};
+    if (!imageKit.publicKey || !imageKit.urlEndpoint) throw new Error('ImageKit configuration is missing.');
+    const callable = context.functionsSdk.httpsCallable(context.functions, 'imagekitAuth');
+    const authResult = await callable();
+    const authData = authResult.data || {};
+    const safeName = String(file.name || 'product-image').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const form = new FormData();
+    form.append('file', file);
+    form.append('fileName', `${Date.now()}-${safeName}`);
+    form.append('folder', '/samam');
+    form.append('useUniqueFileName', 'true');
+    form.append('publicKey', imageKit.publicKey);
+    form.append('token', authData.token);
+    form.append('signature', authData.signature);
+    form.append('expire', String(authData.expire));
+    const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: form });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.url) throw new Error(result.message || 'تعذر رفع الصورة إلى ImageKit.');
+    return result.url;
+  }
+
+  window.SamamData = { STORAGE_KEY, CART_KEY, defaultState, copy, getState, setState, resetState, money, uid, normalize, load, save, login, logout, session, onAuthChange, uploadImage, get serverAvailable() { return serverAvailable; } };
 })();
