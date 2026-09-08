@@ -197,14 +197,14 @@
     if (event.target.id === 'productImageFile' && event.target.files?.[0]) {
       captureProductDraft();
       const file = event.target.files[0];
-      try { editorProduct.image = await window.SamamData.uploadImage(file); toast('تم رفع الصورة إلى مجلد المشروع.'); renderProductModal(); }
-      catch (_) { const reader = new FileReader(); reader.onload = () => { editorProduct.image = reader.result; toast('تمت المعاينة محليًا؛ استخدم استضافة PHP ليتم حفظ الصورة في المشروع.'); renderProductModal(); }; reader.readAsDataURL(file); }
+      try { editorProduct.image = await window.SamamData.uploadImage(file); toast('تم رفع الصورة إلى ImageKit.'); renderProductModal(); }
+      catch (error) { toast(error?.message || 'تعذر رفع الصورة إلى ImageKit.'); }
     }
     if (event.target.matches('[data-footer-upload]') && event.target.files?.[0]) {
       const file = event.target.files[0]; const group = event.target.dataset.footerUpload === 'social' ? 'social' : 'deliveryApps'; const index = Number(event.target.dataset.footerIndex); const footer = state.footer || (state.footer = {});
       const setImage = (path) => { if (footer[group]?.[index]) { footer[group][index].image = path; window.SamamData.setState(state); render(); } };
-      try { setImage(await window.SamamData.uploadImage(file)); toast('تم رفع الأيقونة إلى مجلد المشروع.'); }
-      catch (_) { const reader = new FileReader(); reader.onload = () => { setImage(reader.result); toast('تم حفظ الأيقونة محليًا؛ استخدم استضافة PHP للحفظ داخل المشروع.'); }; reader.readAsDataURL(file); }
+      try { setImage(await window.SamamData.uploadImage(file)); toast('تم رفع الأيقونة إلى ImageKit.'); }
+      catch (error) { toast(error?.message || 'تعذر رفع الأيقونة إلى ImageKit.'); }
     }
     if (event.target.id === 'importFile' && event.target.files?.[0]) { const reader = new FileReader(); reader.onload = () => { try { const loaded = JSON.parse(reader.result); if (!loaded || !Array.isArray(loaded.products) || !loaded.business) throw new Error(); state = loaded; persist('تم استيراد النسخة الاحتياطية.'); render(); } catch (_) { toast('تعذر قراءة الملف. اختر نسخة JSON صحيحة صادرة من اللوحة.'); } }; reader.readAsText(event.target.files[0]); }
   });
@@ -241,7 +241,7 @@
     }
     if (form.id === 'contentForm') {
       const value = formObject(form); const footer = state.footer || (state.footer = {});
-      Object.assign(state.business, { name: value.name.trim(), currency: value.currency.trim(), whatsapp: value.whatsapp.trim(), phone: value.phone.trim(), address: value.address.trim(), openingHours: value.openingHours.trim(), heroTitle: value.heroTitle.trim(), heroText: value.heroText.trim(), serviceText: value.serviceText.trim(), serviceEnabled: form.elements.serviceEnabled.checked, serviceTextColor: value.serviceTextColor, serviceOpacity: number(value.serviceOpacity), heroImage: value.heroImage.trim(), headerLogo: value.headerLogo.trim(), headerLogoSize: number(value.headerLogoSize), heroLogo: value.heroLogo.trim(), heroLogoSize: number(value.heroLogoSize), aboutTitle: value.aboutTitle.trim(), aboutText: value.aboutText.trim() });
+      Object.assign(state.business, { name: value.name.trim(), currency: value.currency.trim(), whatsapp: value.contactWhatsapp.trim(), contactWhatsapp: value.contactWhatsapp.trim(), serviceWhatsapp: value.serviceWhatsapp.trim(), phone: value.phone?.trim() || '', address: value.address.trim(), openingHours: value.openingHours.trim(), heroTitle: value.heroTitle.trim(), heroText: value.heroText.trim(), serviceText: value.serviceText.trim(), serviceEnabled: form.elements.serviceEnabled.checked, serviceTextColor: value.serviceTextColor, serviceOpacity: number(value.serviceOpacity), heroImage: value.heroImage.trim(), headerLogo: value.headerLogo.trim(), headerLogoSize: number(value.headerLogoSize), heroLogo: value.heroLogo.trim(), heroLogoSize: number(value.heroLogoSize), aboutTitle: value.aboutTitle.trim(), aboutText: value.aboutText.trim() });
       state.business.aboutCards = (state.business.aboutCards || []).map((card, i) => ({ ...card, title: form.elements[`aboutCardTitle-${i}`].value.trim(), text: form.elements[`aboutCardText-${i}`].value.trim() }));
       Object.assign(footer, { logo: value.footerLogo.trim(), logoSize: number(value.footerLogoSize), address: value.footerAddress.trim() });
       footer.social = (footer.social || []).map((item, i) => ({ ...item, label: form.elements[`socialLabel-${i}`].value.trim(), url: form.elements[`socialUrl-${i}`].value.trim(), image: form.elements[`socialImage-${i}`].value.trim(), active: form.elements[`socialActive-${i}`].checked }));
@@ -254,6 +254,11 @@
 
   function exportData() { const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `samam-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href); toast('تم تنزيل النسخة الاحتياطية.'); }
   window.addEventListener('storage', (event) => { if (event.key === window.SamamData.STORAGE_KEY) render(); });
+  window.addEventListener('samam:data:changed', () => {
+    if (!$('#loginGate').hidden) return;
+    state = getState();
+    render();
+  });
   document.addEventListener('DOMContentLoaded', async () => {
     await window.SamamData.load();
     const authenticated = await window.SamamData.session();

@@ -12,7 +12,7 @@ window.SamamFirebaseConfig = {
   },
   imageKit: {
     publicKey: 'public_S4xgbmgXS1QW/jTOkLC6e/qBQkg=',
-    urlEndpoint: 'https://ik.imagekit.io/rcycbximd'
-  },
-  functionsRegion: 'asia-southeast1'
+    urlEndpoint: 'https://ik.imagekit.io/rcycbximd',
+    authEndpoint: 'https://samam-imagekit-auth.abdelrhmammeda.workers.dev'
+  }
 };

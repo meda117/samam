@@ -9,7 +9,10 @@
       name: 'مطعم صمّام',
       tagline: 'مضغوط وأكثر',
       currency: 'ر.س',
+      // whatsapp محفوظ للتوافق مع البيانات القديمة فقط. استخدم الرقمين المنفصلين أدناه في الواجهة.
       whatsapp: '966592372549',
+      contactWhatsapp: '966592372549',
+      serviceWhatsapp: '966592372549',
       phone: '0592372549',
       address: 'المملكة العربية السعودية',
       heroImage: 'images/hero-1.jpg',
@@ -120,6 +123,10 @@
     result.business.logo = assetAliases[result.business.logo] || result.business.logo;
     result.business.heroLogo = assetAliases[result.business.heroLogo] || result.business.heroLogo;
     result.footer.logo = assetAliases[result.footer.logo] || result.footer.logo;
+    // ترحيل تلقائي للبيانات التي كانت تحمل رقم واتساب واحدًا قبل فصل الرقمين.
+    const legacyWhatsapp = result.business.whatsapp || defaultState.business.whatsapp;
+    result.business.contactWhatsapp = result.business.contactWhatsapp || legacyWhatsapp;
+    result.business.serviceWhatsapp = result.business.serviceWhatsapp || legacyWhatsapp;
     result.fulfillment = { ...copy(defaultState.fulfillment), ...(result.fulfillment || {}) };
     result.fulfillment.delivery = { ...copy(defaultState.fulfillment.delivery), ...(result.fulfillment.delivery || {}) };
     result.fulfillment.methods = (result.fulfillment.methods || []).map((method) => {
@@ -187,43 +194,55 @@
     if (firebaseContext) return firebaseContext;
     const config = window.SamamFirebaseConfig;
     if (!config?.firebase?.apiKey || !config?.firebase?.databaseURL) throw new Error('Firebase configuration is missing.');
-    const [appSdk, databaseSdk, authSdk, functionsSdk] = await Promise.all([
+    // المتجر يحتاج قاعدة البيانات فقط عند أول فتح. نؤجل Auth وFunctions حتى تحتاجهما لوحة التحكم.
+    const [appSdk, databaseSdk] = await Promise.all([
       import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),
-      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js'),
-      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js'),
-      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js')
+      import('https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js')
     ]);
     const app = appSdk.initializeApp(config.firebase);
     firebaseContext = {
-      config, databaseSdk, authSdk, functionsSdk,
-      database: databaseSdk.getDatabase(app),
-      auth: authSdk.getAuth(app),
-      functions: functionsSdk.getFunctions(app, config.functionsRegion || 'asia-southeast1')
+      config, app, databaseSdk,
+      database: databaseSdk.getDatabase(app)
     };
     return firebaseContext;
   }
 
-  async function load() {
+  async function ensureAuth(context) {
+    const target = context || await ensureFirebase();
+    if (!target.authSdk) {
+      target.authSdk = await import('https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js');
+      target.auth = target.authSdk.getAuth(target.app);
+    }
+    return target;
+  }
+
+  async function refreshFromFirebase() {
     try {
       const context = await ensureFirebase();
       const stateReference = context.databaseSdk.ref(context.database, 'restaurantState');
-      const snapshot = await context.databaseSdk.get(stateReference);
-      serverAvailable = true;
-      if (snapshot.exists() && snapshot.val()?.products && snapshot.val()?.business) setState(snapshot.val());
       if (!firebaseStateUnsubscribe) {
         firebaseStateUnsubscribe = context.databaseSdk.onValue(stateReference, (nextSnapshot) => {
           const nextState = nextSnapshot.val();
+          serverAvailable = true;
           if (nextState?.products && nextState?.business) setState(nextState);
         }, () => { serverAvailable = false; });
       }
     } catch (_) { serverAvailable = false; }
-    return getState();
+  }
+
+  // اعرض النسخة الأخيرة فورًا، وحدّثها من Firebase بعد أول رسم للواجهة.
+  function load() {
+    const cachedState = getState();
+    const beginRefresh = () => { refreshFromFirebase(); };
+    if ('requestIdleCallback' in window) window.requestIdleCallback(beginRefresh, { timeout: 900 });
+    else window.setTimeout(beginRefresh, 0);
+    return Promise.resolve(cachedState);
   }
 
   async function save(state) {
     const normalized = normalize(state);
     setState(normalized);
-    const context = await ensureFirebase();
+    const context = await ensureAuth(await ensureFirebase());
     if (!context.auth.currentUser) {
       const error = new Error('يجب تسجيل دخول الأدمن قبل الحفظ.');
       error.code = 'auth/required';
@@ -242,25 +261,30 @@
   }
 
   async function login(email, password) {
-    const context = await ensureFirebase();
+    const context = await ensureAuth(await ensureFirebase());
     const credential = await context.authSdk.signInWithEmailAndPassword(context.auth, email, password);
     serverAvailable = true;
     return credential.user;
   }
-  async function logout() { const context = await ensureFirebase(); return context.authSdk.signOut(context.auth); }
-  async function session() { try { return Boolean(await waitForAuth(await ensureFirebase())); } catch (_) { return false; } }
-  async function onAuthChange(callback) { const context = await ensureFirebase(); return context.authSdk.onAuthStateChanged(context.auth, callback); }
+  async function logout() { const context = await ensureAuth(await ensureFirebase()); return context.authSdk.signOut(context.auth); }
+  async function session() { try { return Boolean(await waitForAuth(await ensureAuth(await ensureFirebase()))); } catch (_) { return false; } }
+  async function onAuthChange(callback) { const context = await ensureAuth(await ensureFirebase()); return context.authSdk.onAuthStateChanged(context.auth, callback); }
 
   async function uploadImage(file) {
     if (!file || !String(file.type || '').startsWith('image/')) throw new Error('اختر ملف صورة صالحًا.');
     if (file.size > 5 * 1024 * 1024) throw new Error('أقصى حجم للصورة هو 5 ميجابايت.');
-    const context = await ensureFirebase();
+    const context = await ensureAuth(await ensureFirebase());
     if (!context.auth.currentUser) throw new Error('يجب تسجيل دخول الأدمن قبل رفع الصور.');
     const imageKit = context.config.imageKit || {};
     if (!imageKit.publicKey || !imageKit.urlEndpoint) throw new Error('ImageKit configuration is missing.');
-    const callable = context.functionsSdk.httpsCallable(context.functions, 'imagekitAuth');
-    const authResult = await callable();
-    const authData = authResult.data || {};
+    if (!/^https:\/\//i.test(String(imageKit.authEndpoint || ''))) throw new Error('أضف رابط خدمة رفع الصور إلى firebase-config.js أولًا.');
+    const idToken = await context.auth.currentUser.getIdToken();
+    const authResponse = await fetch(imageKit.authEndpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${idToken}` }
+    });
+    const authData = await authResponse.json().catch(() => ({}));
+    if (!authResponse.ok || !authData.token || !authData.signature || !authData.expire) throw new Error(authData.error || 'تعذر التحقق من صلاحية رفع الصورة.');
     const safeName = String(file.name || 'product-image').replace(/[^a-zA-Z0-9._-]/g, '_');
     const form = new FormData();
     form.append('file', file);

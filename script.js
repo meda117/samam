@@ -11,6 +11,10 @@
   const $ = (selector) => document.querySelector(selector);
   const esc = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   const visible = (items) => (items || []).filter((item) => item.active !== false);
+  const whatsappUrl = (number) => {
+    const digits = String(number || '').replace(/\D/g, '');
+    return digits ? `https://wa.me/${digits}` : '#';
+  };
   const productById = (id) => state.products.find((product) => product.id === id);
   const riceForProduct = (product) => visible(state.riceTypes).filter((rice) => product.riceAllowedIds === null || product.riceAllowedIds?.includes(rice.id));
   const riceById = (id, product) => riceForProduct(product || { riceAllowedIds: null }).find((rice) => rice.id === id);
@@ -80,10 +84,10 @@
     const heroText = $('#heroText');
     if (heroText) heroText.remove();
     $('#menuKicker').textContent = business.menuKicker || 'اختر ما يناسبك';
-    $('#heroService').textContent = business.serviceText;
-    $('#heroService').hidden = business.serviceEnabled === false;
-    $('#heroService').style.setProperty('--service-text-color', business.serviceTextColor || '#fdf2d4');
-    $('#heroService').style.setProperty('--service-background', `rgba(0, 0, 0, ${Math.min(.9, Math.max(.05, Number(business.serviceOpacity ?? .65)))})`);
+    const service = $('#heroService');
+    service.hidden = business.serviceEnabled === false || !String(business.serviceText || '').trim();
+    service.innerHTML = `${esc(business.serviceText || '')}<a href="${esc(whatsappUrl(business.serviceWhatsapp))}" target="_blank" rel="noopener">اضغط هنا</a>`;
+    service.style.setProperty('--service-text-color', business.serviceTextColor || '#fdf2d4');
     $('#hero').style.backgroundImage = `url("${String(business.heroImage).replace(/"/g, '%22')}")`;
     $('#aboutTitle').textContent = business.aboutTitle;
     $('#aboutText').textContent = business.aboutText;
@@ -105,7 +109,7 @@
     $('#footerName').textContent = state.business.name;
     $('#footerAddress').textContent = footer.address || state.business.address;
     $('#footerCopyright').textContent = `© ${new Date().getFullYear()} ${state.business.name}`;
-    $('#footerContact').innerHTML = `<a href="tel:${esc(state.business.phone)}"><span>اتصل بنا</span><strong>${esc(state.business.phone)}</strong></a><a class="footer-whatsapp" href="https://wa.me/${esc(state.business.whatsapp)}" target="_blank" rel="noopener"><span>واتساب</span><strong>راسلنا الآن</strong></a><div class="footer-address"><span>العنوان</span><strong>${esc(state.business.address)}</strong></div>`;
+    $('#footerContact').innerHTML = `<a class="footer-whatsapp footer-whatsapp-icon" href="${esc(whatsappUrl(state.business.contactWhatsapp))}" target="_blank" rel="noopener" aria-label="راسلنا عبر واتساب" title="راسلنا عبر واتساب"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.56 7.48L3 20.5l1.53-4.45A8.5 8.5 0 1 1 20.5 11.5Z"/><path d="M8.4 7.6c.2-.45.4-.46.7-.45h.55c.18 0 .42.07.5.36l.67 1.58c.07.19.04.39-.1.57l-.45.58c-.12.13-.1.3 0 .42.28.48.75 1.14 1.6 1.57.16.09.29.07.4-.05l.59-.69c.14-.16.3-.18.5-.1l1.5.7c.24.11.35.23.36.4.02.55-.23 1.14-.66 1.38-.34.2-.8.32-1.34.16-1.04-.32-2.28-1.1-3.36-2.08-1.01-.93-1.9-2.12-2.14-3.22-.12-.56-.04-1.03.18-1.48Z"/></svg></a>`;
     $('#footerSocial').innerHTML = visible(footer.social || []).map((item) => `<a href="${esc(item.url || '#')}" target="_blank" rel="noopener" aria-label="${esc(item.label)}"><img src="${esc(item.image)}" alt="${esc(item.label)}"></a>`).join('') || '<span class="footer-empty">لا توجد روابط اجتماعية مضافة.</span>';
     $('#footerDelivery').innerHTML = visible(footer.deliveryApps || []).map((item) => `<a href="${esc(item.url || '#')}" target="_blank" rel="noopener" aria-label="${esc(item.label)}"><img src="${esc(item.image)}" alt="${esc(item.label)}"></a>`).join('') || '<span class="footer-empty">لا توجد تطبيقات توصيل مضافة.</span>';
   }
@@ -129,6 +133,21 @@
     $('#menuGrid').innerHTML = products.map(renderProduct).join('');
   }
 
+  // يطلب ImageKit نسخة مناسبة لمقاس الكارت بدلاً من تنزيل الصورة الأصلية الكبيرة.
+  // لا نعدل الرابط إذا كان يحتوي بالفعل على تحويل ImageKit مخصص.
+  function optimizedImageUrl(source, width = 720) {
+    const value = String(source || '');
+    if (!/^https:\/\/ik\.imagekit\.io\//i.test(value) || /\/tr:[^/]+\//.test(value)) return value;
+    try {
+      const url = new URL(value);
+      const parts = url.pathname.split('/');
+      if (!parts[1]) return value;
+      parts.splice(2, 0, `tr:w-${Math.max(120, Math.round(width))},q-75,f-auto`);
+      url.pathname = parts.join('/');
+      return url.toString();
+    } catch (_) { return value; }
+  }
+
   function renderProduct(product) {
     const selection = currentSelection(product);
     const hasSizes = (product.sizes || []).length > 0;
@@ -143,7 +162,7 @@
     const riceOptions = needsRice ? `<label class="select-label">نوع الرز<select data-action="select-rice" data-product-id="${esc(product.id)}"><option value="">اختر نوع الرز</option>${productRiceTypes.map((rice) => `<option value="${esc(rice.id)}" ${selection.riceId === rice.id ? 'selected' : ''}>${esc(rice.name)}${Number(rice.price) ? ` (+${money(rice.price, state.business.currency)})` : ''}</option>`).join('')}</select></label>` : '';
     const discountPercent = Number(product.oldPrice) > price ? Math.round((1 - price / Number(product.oldPrice)) * 100) : 0;
     return `<article class="product-card" data-product-id="${esc(product.id)}">
-      <div class="product-image"><img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" onerror="this.closest('.product-image').classList.add('missing-image')">${product.badge ? `<span class="badge">${esc(product.badge)}</span>` : ''}${discountPercent ? `<span class="discount-badge">خصم ${discountPercent}%</span>` : ''}${product.calories ? `<span class="calories">${esc(product.calories)} سعرة</span>` : ''}</div>
+      <div class="product-image"><img src="${esc(optimizedImageUrl(product.image))}" alt="${esc(product.name)}" loading="lazy" decoding="async" onerror="this.closest('.product-image').classList.add('missing-image')">${product.badge ? `<span class="badge">${esc(product.badge)}</span>` : ''}${discountPercent ? `<span class="discount-badge">خصم ${discountPercent}%</span>` : ''}${product.calories ? `<span class="calories">${esc(product.calories)} سعرة</span>` : ''}</div>
       <div class="product-body"><div><p class="product-category">${esc(categoryName(product.category))}</p><h3>${esc(product.name)}</h3><p class="product-description">${esc(product.description || '')}</p></div>
       ${sizeOptions}${riceOptions}
       <div class="product-bottom"><div><span class="product-price">${needsSize ? 'اختر الحجم أولًا' : money(price, state.business.currency)}</span>${!needsSize && Number(product.oldPrice) > price ? `<del>${money(product.oldPrice, state.business.currency)}</del>` : ''}</div>
@@ -313,5 +332,9 @@
   window.addEventListener('resize', syncStickyBars);
   window.addEventListener('storage', (event) => { if (event.key === window.SamamData.STORAGE_KEY) { appliedCoupon = null; renderSite(); } });
   window.addEventListener('samam:data:changed', renderSite);
-  document.addEventListener('DOMContentLoaded', async () => { await window.SamamData.load(); renderSite(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    // الواجهة تظهر فورًا بالبيانات المخزنة، ثم تتحدّث وحدها عند وصول Firebase.
+    renderSite();
+    window.SamamData.load();
+  });
 })();

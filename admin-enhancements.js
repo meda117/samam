@@ -29,8 +29,63 @@
 
     const label = document.createElement('label');
     label.className = 'field';
-    label.innerHTML = '<span>رفع لوجو الفوتر</span><input id="footerLogoFile" type="file" accept="image/*"><small>اختر الصورة ثم اضغط حفظ محتوى الموقع.</small>';
+    label.innerHTML = '<span>رفع لوجو الفوتر</span><input id="footerLogoFile" data-brand-upload="footerLogo" type="file" accept="image/*"><small>تُرفع الصورة إلى ImageKit، ثم احفظ المحتوى لنشرها.</small>';
     fields.appendChild(label);
+  }
+
+  function addBrandImageUploadControls() {
+    const form = document.querySelector('#contentForm');
+    if (!form) return;
+    const fields = [
+      ['headerLogo', 'headerLogoFile', 'رفع لوجو الهيدر'],
+      ['heroLogo', 'heroLogoFile', 'رفع لوجو الهيرو'],
+      ['heroImage', 'heroImageFile', 'رفع صورة خلفية الهيرو']
+    ];
+    fields.forEach(([fieldName, inputId, labelText]) => {
+      if (document.querySelector(`#${inputId}`)) return;
+      const field = form.elements[fieldName];
+      const host = field && field.closest('.field');
+      if (!host) return;
+      const label = document.createElement('label');
+      label.className = 'field';
+      label.innerHTML = `<span>${labelText}</span><input id="${inputId}" data-brand-upload="${fieldName}" type="file" accept="image/*"><small>تُرفع الصورة إلى ImageKit، ثم احفظ المحتوى لنشرها.</small>`;
+      host.insertAdjacentElement('afterend', label);
+    });
+  }
+
+  function refineContactControls() {
+    const form = document.querySelector('#contentForm');
+    if (!form) return;
+    const phone = form.elements.phone;
+    if (phone) phone.closest('.field')?.remove();
+    const contactWhatsapp = form.elements.contactWhatsapp || form.elements.whatsapp;
+    if (contactWhatsapp?.closest('.field')) {
+      contactWhatsapp.name = 'contactWhatsapp';
+      contactWhatsapp.value = (window.SamamData.getState().business || {}).contactWhatsapp || contactWhatsapp.value;
+      contactWhatsapp.closest('.field').childNodes[0].nodeValue = 'رقم واتساب «راسلنا» في الفوتر';
+      const host = contactWhatsapp.closest('.field');
+      if (!form.elements.serviceWhatsapp) {
+        const business = window.SamamData.getState().business || {};
+        const label = document.createElement('label');
+        label.className = 'field';
+        label.innerHTML = '<span>رقم واتساب خدمات الإعاشة</span><input name="serviceWhatsapp" inputmode="tel" required>';
+        label.querySelector('input').value = business.serviceWhatsapp || business.whatsapp || '';
+        host.insertAdjacentElement('afterend', label);
+      }
+    }
+    const location = form.elements.footerAddress;
+    if (location?.closest('.field')) location.closest('.field').childNodes[0].nodeValue = 'الموقع في الفوتر';
+    const opacity = form.elements.serviceOpacity;
+    if (opacity) opacity.closest('.field')?.remove();
+  }
+
+  function showUploadMessage(message) {
+    const toast = document.querySelector('#adminToast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showUploadMessage.timer);
+    showUploadMessage.timer = setTimeout(() => toast.classList.remove('show'), 3600);
   }
 
   function addAnnouncementMotionControl() {
@@ -61,22 +116,29 @@
   document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('#adminMain');
     if (!main) return;
-    new MutationObserver(() => { addMenuKickerControl(); addFooterLogoControl(); addAnnouncementMotionControl(); }).observe(main, { childList: true, subtree: true });
+    new MutationObserver(() => { addMenuKickerControl(); addFooterLogoControl(); addBrandImageUploadControls(); addAnnouncementMotionControl(); refineContactControls(); }).observe(main, { childList: true, subtree: true });
     addMenuKickerControl();
     addFooterLogoControl();
+    addBrandImageUploadControls();
     addAnnouncementMotionControl();
+    refineContactControls();
   });
 
   document.addEventListener('change', async (event) => {
-    if (event.target.id !== 'footerLogoFile' || !event.target.files?.[0]) return;
-    const logoPath = document.querySelector('#contentForm input[name="footerLogo"]');
-    if (!logoPath) return;
+    const target = event.target;
+    const fieldName = target.dataset.brandUpload;
+    if (!fieldName || !target.files?.[0]) return;
+    const imagePath = document.querySelector(`#contentForm [name="${fieldName}"]`);
+    if (!imagePath) return;
+    target.disabled = true;
     try {
-      logoPath.value = await window.SamamData.uploadImage(event.target.files[0]);
-    } catch (_) {
-      const reader = new FileReader();
-      reader.onload = () => { logoPath.value = reader.result; };
-      reader.readAsDataURL(event.target.files[0]);
+      imagePath.value = await window.SamamData.uploadImage(target.files[0]);
+      imagePath.dispatchEvent(new Event('input', { bubbles: true }));
+      showUploadMessage('تم رفع الصورة إلى ImageKit. اضغط «حفظ محتوى الموقع» لنشر التغيير.');
+    } catch (error) {
+      showUploadMessage(error?.message || 'تعذر رفع الصورة. تحقق من إعداد خدمة الرفع.');
+    } finally {
+      target.disabled = false;
     }
   });
 })();
