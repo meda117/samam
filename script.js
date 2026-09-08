@@ -111,12 +111,14 @@
     service.innerHTML = `<span class="service-attention" aria-hidden="true">!</span><div class="hero-service-content"><span class="hero-service-copy">${serviceCopy}</span><a href="${esc(whatsappUrl(business.serviceWhatsapp))}" target="_blank" rel="noopener">اضغط هنا</a></div>`;
     service.style.setProperty('--service-text-color', business.serviceTextColor || '#fdf2d4');
     // Inline important values make the catering callout immune to old cached
-    // stylesheets. It stays in the lower-left corner of the hero; its CTA is
+    // stylesheets. It sits in the upper-left area of the hero; its CTA is
     // centered underneath the multi-line text.
     service.style.setProperty('position', 'absolute', 'important');
-    service.style.setProperty('left', '4px', 'important');
+    service.style.setProperty('left', '-50px', 'important');
     service.style.setProperty('right', 'auto', 'important');
-    service.style.setProperty('bottom', '34px', 'important');
+    // Leave just enough room for the glowing exclamation mark above the copy.
+    service.style.setProperty('top', compactScreen ? '38px' : '42px', 'important');
+    service.style.setProperty('bottom', 'auto', 'important');
     service.style.setProperty('transform', 'none', 'important');
     service.style.setProperty('width', '210px', 'important');
     service.style.setProperty('display', 'flex', 'important');
