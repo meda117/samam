@@ -108,7 +108,7 @@
     const service = $('#heroService');
     service.hidden = business.serviceEnabled === false || !String(business.serviceText || '').trim();
     const serviceCopy = esc(business.serviceText || '').replace(/\r?\n/g, '<br>');
-    service.innerHTML = `<span class="hero-service-copy">${serviceCopy}</span><a href="${esc(whatsappUrl(business.serviceWhatsapp))}" target="_blank" rel="noopener">اضغط هنا</a>`;
+    service.innerHTML = `<span class="service-attention" aria-hidden="true">!</span><div class="hero-service-content"><span class="hero-service-copy">${serviceCopy}</span><a href="${esc(whatsappUrl(business.serviceWhatsapp))}" target="_blank" rel="noopener">اضغط هنا</a></div>`;
     service.style.setProperty('--service-text-color', business.serviceTextColor || '#fdf2d4');
     // Inline important values make the catering callout immune to old cached
     // stylesheets. It stays in the lower-left corner of the hero; its CTA is
@@ -124,8 +124,6 @@
     service.style.setProperty('align-items', 'stretch', 'important');
     service.style.setProperty('gap', '7px', 'important');
     service.style.setProperty('text-align', 'center', 'important');
-    const serviceButton = service.querySelector('a');
-    if (serviceButton) serviceButton.style.setProperty('align-self', 'center', 'important');
     $('#hero').style.backgroundImage = `url("${String(business.heroImage).replace(/"/g, '%22')}")`;
     $('#aboutTitle').textContent = business.aboutTitle;
     $('#aboutText').textContent = business.aboutText;
@@ -329,17 +327,20 @@
     const method = selectedMethod();
     const payment = visible(state.fulfillment.payments).find((entry) => entry.id === $('#paymentMethod').value);
     const sum = totals();
-    const lines = cart.map((item, index) => `${index + 1}. ${item.name}${item.servingLabel ? ` (${item.servingLabel})` : ''}${item.sizeLabel ? ` (${item.sizeLabel})` : ''}${item.riceName ? ` - ${item.riceName}` : ''} × ${item.quantity} = ${money(item.price * item.quantity, state.business.currency)}`);
+    const lines = cart.map((item, index) => `${index + 1}. ${item.name}${item.servingLabel ? ` (${item.servingLabel})` : ''}${item.sizeLabel ? ` (${item.sizeLabel})` : ''}${item.riceName ? ` - ${item.riceName}` : ''}\n   الكمية: ${item.quantity} | الإجمالي: ${money(item.price * item.quantity, state.business.currency)}`);
+    const separator = '--------------------';
     const details = [
-      `طلب جديد من ${state.business.name}`,
-      '', ...lines, '',
+      '🛍️ *طلب جديد*', `*${state.business.name}*`, separator,
+      '📦 *تفاصيل الأصناف*', ...lines, separator,
+      '💳 *ملخص الحساب*',
       `المجموع الفرعي: ${money(sum.subtotal, state.business.currency)}`,
-      sum.delivery ? `التوصيل: ${money(sum.delivery, state.business.currency)}` : '',
+      sum.delivery ? `رسوم التوصيل: ${money(sum.delivery, state.business.currency)}` : 'التوصيل: مجاني',
       sum.discount ? `الخصم (${appliedCoupon.code}): ${money(sum.discount, state.business.currency)}` : '',
-      `الإجمالي: ${money(sum.total, state.business.currency)}`,
-      '', `الاستلام: ${method?.name || ''}`, `الدفع: ${payment?.name || ''}`,
-      `الاسم: ${$('#customerName').value.trim()}`, `الجوال: ${$('#customerPhone').value.trim()}`,
-      ...(method?.fields || []).map((field) => `${field.label}: ${form.elements[`method-field-${field.id}`]?.value.trim() || ''}`)
+      `*الإجمالي النهائي: ${money(sum.total, state.business.currency)}*`, separator,
+      '🚚 *الاستلام والدفع*', `طريقة الاستلام: ${method?.name || ''}`, `طريقة الدفع: ${payment?.name || ''}`, separator,
+      '👤 *بيانات العميل*', `الاسم: ${$('#customerName').value.trim()}`, `رقم الجوال: ${$('#customerPhone').value.trim()}`,
+      ...(method?.fields || []).map((field) => `${field.label}: ${form.elements[`method-field-${field.id}`]?.value.trim() || ''}`),
+      separator, 'شكرًا لطلبك 🌟'
     ].filter(Boolean).join('\n');
     const number = String(state.business.whatsapp || '').replace(/\D/g, '');
     if (!number) { showToast('أضف رقم واتساب المطعم من لوحة التحكم أولًا.'); return; }
