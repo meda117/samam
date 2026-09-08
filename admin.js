@@ -28,6 +28,14 @@
   function categoryName(id) { return state.categories.find((category) => category.id === id)?.name || id; }
   function productCount(categoryId) { return state.products.filter((product) => product.category === categoryId && product.active !== false).length; }
   function number(value) { return Number(value || 0); }
+  function productPresentationSummary(product) {
+    if (!product.servingOptions) return `${product.requiresRice ? '<span class="status active">يتطلب رز</span>' : '<span class="muted">لا يتطلب رز</span>'}${product.sizes?.length ? `<br><span class="muted">${product.sizes.length} أحجام</span>` : ''}`;
+    const options = productServingOptions(product);
+    const labels = [];
+    if (options.plain.enabled) labels.push(`سادة${options.plain.sizes.length ? ` (${options.plain.sizes.length} أحجام)` : ''}`);
+    if (options.rice.enabled) labels.push(`مع الرز${options.rice.sizes.length ? ` (${options.rice.sizes.length} أحجام)` : ''}`);
+    return labels.length ? `<span class="status active">${labels.map(esc).join(' • ')}</span>` : '<span class="muted">بدون خيارات تقديم</span>';
+  }
 
   function render() {
     state = getState();
@@ -55,7 +63,7 @@
       products.sort((first, second) => (categoryOrder.get(first.category) ?? Number.MAX_SAFE_INTEGER) - (categoryOrder.get(second.category) ?? Number.MAX_SAFE_INTEGER));
     }
     return `<div class="page-intro"><div><h2>الأصناف والأسعار</h2><p>أضف أو عدّل أو أخفِ الأصناف، خيارات الحجم، الصور والأسعار.</p></div><div class="toolbar"><select class="filter-select" id="productFilter"><option value="all">كل الأقسام</option>${state.categories.map((category) => `<option value="${esc(category.id)}" ${productFilter === category.id ? 'selected' : ''}>${esc(category.name)}</option>`).join('')}</select><button class="primary" data-action="add-product">＋ إضافة صنف</button></div></div>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th>الصنف</th><th>القسم</th><th>السعر</th><th>الرز / الأحجام</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>${products.map((product) => `<tr><td><div class="product-cell"><img src="${esc(product.image)}" alt=""><div><strong>${esc(product.name)}</strong><span class="muted">${esc(product.description || 'بدون وصف')}</span></div></div></td><td>${esc(categoryName(product.category))}</td><td><strong>${money(product.basePrice, state.business.currency)}</strong>${product.oldPrice ? `<br><span class="muted">قبل: ${money(product.oldPrice, state.business.currency)}</span>` : ''}</td><td>${product.requiresRice ? '<span class="status active">يتطلب رز</span>' : '<span class="muted">لا يتطلب رز</span>'}${product.sizes?.length ? `<br><span class="muted">${product.sizes.length} أحجام</span>` : ''}</td><td><span class="status ${product.active ? 'active' : 'inactive'}">${product.active ? 'ظاهر' : 'مخفي'}</span></td><td><div class="actions"><button class="table-action" data-action="edit-product" data-id="${esc(product.id)}">تعديل</button><button class="table-action" data-action="toggle-product" data-id="${esc(product.id)}">${product.active ? 'إخفاء' : 'إظهار'}</button><button class="table-action delete" data-action="delete-product" data-id="${esc(product.id)}">حذف</button></div></td></tr>`).join('') || '<tr><td colspan="6" class="muted">لا توجد أصناف في هذا القسم.</td></tr>'}</tbody></table></div>`;
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>الصنف</th><th>القسم</th><th>السعر</th><th>الرز / الأحجام</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>${products.map((product) => `<tr><td><div class="product-cell"><img src="${esc(product.image)}" alt=""><div><strong>${esc(product.name)}</strong><span class="muted">${esc(product.description || 'بدون وصف')}</span></div></div></td><td>${esc(categoryName(product.category))}</td><td><strong>${money(product.basePrice, state.business.currency)}</strong>${product.oldPrice ? `<br><span class="muted">قبل: ${money(product.oldPrice, state.business.currency)}</span>` : ''}</td><td>${productPresentationSummary(product)}</td><td><span class="status ${product.active ? 'active' : 'inactive'}">${product.active ? 'ظاهر' : 'مخفي'}</span></td><td><div class="actions"><button class="table-action" data-action="edit-product" data-id="${esc(product.id)}">تعديل</button><button class="table-action" data-action="toggle-product" data-id="${esc(product.id)}">${product.active ? 'إخفاء' : 'إظهار'}</button><button class="table-action delete" data-action="delete-product" data-id="${esc(product.id)}">حذف</button></div></td></tr>`).join('') || '<tr><td colspan="6" class="muted">لا توجد أصناف في هذا القسم.</td></tr>'}</tbody></table></div>`;
   }
 
   function addProductOrderControls() {
@@ -109,7 +117,7 @@
   function contentPage() {
     const b = state.business;
     return baseContentPage()
-      .replace(/<label class="field">نص الخدمات<input name="serviceText"[^>]*><\/label>/, `<label class="field">نص الخدمات<input name="serviceText" value="${esc(b.serviceText)}"></label><label class="field"><span>إظهار شريط الخدمات</span><div class="switch-row"><small>أسفل الهيرو</small><input class="switch" name="serviceEnabled" type="checkbox" ${b.serviceEnabled !== false ? 'checked' : ''}></div></label><label class="field">لون نص شريط الخدمات<input name="serviceTextColor" type="color" value="${esc(b.serviceTextColor || '#fdf2d4')}"></label><label class="field">شفافية الخلفية السوداء<input name="serviceOpacity" type="number" min="0.05" max="0.9" step="0.05" value="${number(b.serviceOpacity ?? .65)}"></label>`)
+      .replace(/<label class="field">نص الخدمات<input name="serviceText"[^>]*><\/label>/, `<label class="field full">نص خدمات الإعاشة <small class="muted">اضغط Enter لكتابة سطر جديد؛ الزر يظهر أسفل النص.</small><textarea name="serviceText" rows="3" placeholder="لخدمات الإعاشة&#10;والوجبات">${esc(b.serviceText)}</textarea></label><label class="field"><span>إظهار شريط الخدمات</span><div class="switch-row"><small>داخل الهيرو في الجهة اليسرى</small><input class="switch" name="serviceEnabled" type="checkbox" ${b.serviceEnabled !== false ? 'checked' : ''}></div></label><label class="field">لون نص شريط الخدمات<input name="serviceTextColor" type="color" value="${esc(b.serviceTextColor || '#fdf2d4')}"></label><label class="field">شفافية الخلفية السوداء<input name="serviceOpacity" type="number" min="0.05" max="0.9" step="0.05" value="${number(b.serviceOpacity ?? .65)}"></label>`)
       .replace('<h4>تطبيقات التوصيل</h4>', '<button class="secondary" type="button" data-action="add-social">＋ إضافة شبكة اجتماعية</button><h4>تطبيقات التوصيل</h4>')
       .replace('</article><article class="panel full"><h3>أقسام القائمة</h3>', '<button class="secondary" type="button" data-action="add-delivery-app">＋ إضافة تطبيق توصيل</button></article><article class="panel full"><h3>أقسام القائمة</h3>');
   }
@@ -123,8 +131,41 @@
 
   function readProductForm(form) {
     const value = formObject(form);
-    const sizes = [...form.querySelectorAll('[data-size-label]')].map((input) => { const index = input.dataset.sizeLabel; return { id: editorProduct.sizes[index]?.id || uid('size'), label: input.value.trim(), price: number(form.querySelector(`[data-size-price="${index}"]`).value) }; }).filter((size) => size.label);
-    return { name: value.name.trim(), category: value.category, description: value.description.trim(), image: value.image.trim(), basePrice: number(value.basePrice), oldPrice: number(value.oldPrice), calories: number(value.calories), badge: value.badge.trim(), active: form.elements.active.checked, requiresRice: form.elements.requiresRice.checked, riceAllowedIds: [...form.querySelectorAll('[name="allowedRice"]:checked')].map((input) => input.value), sizes };
+    const existingOptions = productServingOptions(editorProduct);
+    const readOption = (id) => {
+      const sizes = [...form.querySelectorAll(`[data-serving-size-label="${id}"]`)].map((input) => {
+        const index = Number(input.dataset.index);
+        const stored = existingOptions[id].sizes[index];
+        return { id: stored?.id || uid('size'), label: input.value.trim(), price: number(form.querySelector(`[data-serving-size-price="${id}-${index}"]`)?.value) };
+      }).filter((size) => size.label);
+      return {
+        enabled: form.elements[`servingEnabled-${id}`].checked,
+        basePrice: number(form.elements[`servingPrice-${id}`].value),
+        sizes,
+        riceAllowedIds: id === 'rice' ? [...form.querySelectorAll('[name="allowedRice-rice"]:checked')].map((input) => input.value) : []
+      };
+    };
+    const servingOptions = { plain: readOption('plain'), rice: readOption('rice') };
+    const fallback = servingOptions.plain.enabled ? servingOptions.plain : (servingOptions.rice.enabled ? servingOptions.rice : null);
+    return {
+      name: value.name.trim(), category: value.category, description: value.description.trim(), image: value.image.trim(),
+      basePrice: fallback ? fallback.basePrice : number(value.basePrice), oldPrice: number(value.oldPrice), calories: number(value.calories), badge: value.badge.trim(), active: form.elements.active.checked,
+      requiresRice: servingOptions.rice.enabled && !servingOptions.plain.enabled,
+      riceAllowedIds: servingOptions.rice.riceAllowedIds,
+      sizes: fallback?.sizes || [],
+      servingOptions
+    };
+  }
+
+  function productServingOptions(product) {
+    const source = product?.servingOptions;
+    const option = (id, legacyEnabled) => ({
+      enabled: source ? Boolean(source[id]?.enabled) : legacyEnabled,
+      basePrice: number(source?.[id]?.basePrice ?? product?.basePrice),
+      sizes: copy(source?.[id]?.sizes || product?.sizes || []),
+      riceAllowedIds: Array.isArray(source?.[id]?.riceAllowedIds) ? source[id].riceAllowedIds : (Array.isArray(product?.riceAllowedIds) ? product.riceAllowedIds : [])
+    });
+    return { plain: option('plain', !product?.requiresRice), rice: option('rice', Boolean(product?.requiresRice)) };
   }
 
   function captureProductDraft() {
@@ -133,13 +174,19 @@
   }
 
   function openProductEditor(product) {
-    editorProduct = copy(product || { id: uid('product'), category: state.categories[0]?.id || 'chicken', name: '', description: '', image: '', calories: 0, badge: '', basePrice: 0, oldPrice: 0, active: true, requiresRice: false, riceAllowedIds: [], sizes: [] });
+    editorProduct = copy(product || { id: uid('product'), category: state.categories[0]?.id || 'chicken', name: '', description: '', image: '', calories: 0, badge: '', basePrice: 0, oldPrice: 0, active: true, requiresRice: false, riceAllowedIds: [], sizes: [], servingOptions: { plain: { enabled: false, basePrice: 0, sizes: [], riceAllowedIds: [] }, rice: { enabled: false, basePrice: 0, sizes: [], riceAllowedIds: [] } } });
     renderProductModal();
   }
   function renderProductModal() {
     const p = editorProduct;
-    const sizeRows = (p.sizes || []).map((size, index) => `<div class="mini-row"><input data-size-label="${index}" value="${esc(size.label)}" placeholder="اسم الحجم"><input class="short" data-size-price="${index}" type="number" min="0" step="0.01" value="${number(size.price)}" placeholder="السعر"><button type="button" data-action="remove-size" data-index="${index}">×</button></div>`).join('');
-    openModal(`<div class="modal-head"><h2>${p.name ? 'تعديل صنف' : 'إضافة صنف جديد'}</h2><button class="modal-close" data-action="close-modal" aria-label="إغلاق">×</button></div><form id="productForm" class="field-grid"><label class="field">اسم الصنف<input name="name" required value="${esc(p.name)}"></label><label class="field">القسم<select name="category">${state.categories.map((category) => `<option value="${esc(category.id)}" ${p.category === category.id ? 'selected' : ''}>${esc(category.name)}</option>`).join('')}</select></label><label class="field full">الوصف<input name="description" value="${esc(p.description)}" placeholder="وصف مختصر يظهر للعميل"></label><label class="field">السعر الأساسي<input name="basePrice" type="number" required min="0" step="0.5" value="${number(p.basePrice)}"></label><label class="field">السعر قبل التخفيض (اختياري)<input name="oldPrice" type="number" min="0" step="0.5" value="${number(p.oldPrice)}"></label><label class="field">السعرات (اختياري)<input name="calories" type="number" min="0" step="1" value="${number(p.calories)}"></label><label class="field">شارة أعلى الصورة (اختياري)<input name="badge" value="${esc(p.badge)}" placeholder="مثال: تحضير 25 دقيقة"></label><label class="field full">رابط أو مسار الصورة<input name="image" required value="${esc(p.image)}" placeholder="images/product.webp أو https://..."></label><label class="field">رفع صورة من الجهاز<input id="productImageFile" type="file" accept="image/*"><small class="muted">عند النشر ترفع تلقائيًا إلى مجلد uploads داخل المشروع.</small></label><div class="field"><span>معاينة الصورة</span><img class="image-preview" src="${esc(p.image)}" alt="معاينة"></div><label class="field"><span>الحالة</span><div class="switch-row"><small>عرض الصنف في الموقع</small><input class="switch" name="active" type="checkbox" ${p.active ? 'checked' : ''}></div></label><label class="field"><span>اختيار الرز</span><div class="switch-row"><small>يطلب من العميل تحديد نوع الرز</small><input class="switch" name="requiresRice" type="checkbox" ${p.requiresRice ? 'checked' : ''}></div></label><div class="field full"><span>أنواع الرز المتاحة لهذا الصنف</span><div class="check-grid">${state.riceTypes.map((rice) => `<label><input name="allowedRice" type="checkbox" value="${esc(rice.id)}" ${(p.riceAllowedIds === null || p.riceAllowedIds?.includes(rice.id)) ? 'checked' : ''}>${esc(rice.name)}</label>`).join('') || '<span class="muted">أضف أنواع رز من القسم المخصص أولًا.</span>'}</div></div><div class="field full"><div class="size-head"><h3>الأحجام والأسعار</h3><button class="secondary" type="button" data-action="add-size">＋ إضافة حجم</button></div><p class="muted">اتركها فارغة إذا كان للصنف سعر واحد فقط.</p><div class="mini-list">${sizeRows || '<p class="muted">لا توجد أحجام مضافة.</p>'}</div></div><div class="form-footer field full"><button class="secondary" type="button" data-action="close-modal">إلغاء</button><button class="primary" type="submit">حفظ الصنف</button></div></form>`);
+    const options = productServingOptions(p);
+    const optionEditor = (id, label, rice) => {
+      const option = options[id];
+      const sizeRows = option.sizes.map((size, index) => `<div class="mini-row"><input data-serving-size-label="${id}" data-index="${index}" value="${esc(size.label)}" placeholder="اسم الحجم أو الكمية"><input class="short" data-serving-size-price="${id}-${index}" type="number" min="0" step="0.01" value="${number(size.price)}" placeholder="السعر"><button type="button" data-action="remove-serving-size" data-serving="${id}" data-index="${index}">×</button></div>`).join('');
+      const riceChoices = rice ? `<div class="field full"><span>أنواع الرز المتاحة مع هذا الصنف</span><div class="check-grid">${state.riceTypes.map((entry) => `<label><input name="allowedRice-rice" type="checkbox" value="${esc(entry.id)}" ${option.riceAllowedIds.includes(entry.id) ? 'checked' : ''}>${esc(entry.name)}</label>`).join('') || '<span class="muted">أضف أنواع رز من القسم المخصص أولًا.</span>'}</div></div>` : '';
+      return `<section class="serving-option-editor"><div class="switch-row"><div><strong>${label}</strong><small>${rice ? 'يعرض نوع الرز بعد اختياره.' : 'لا يعرض خيارات الرز للعميل.'}</small></div><input class="switch" name="servingEnabled-${id}" type="checkbox" ${option.enabled ? 'checked' : ''}></div><label class="field">سعر ${label} الأساسي<input name="servingPrice-${id}" type="number" min="0" step="0.01" value="${number(option.basePrice)}"></label>${riceChoices}<div class="field full"><div class="size-head"><h4>أحجام / كميات ${label}</h4><button class="secondary" type="button" data-action="add-serving-size" data-serving="${id}">＋ إضافة حجم أو كمية</button></div><p class="muted">اتركها فارغة إذا كان لهذا الاختيار سعر واحد فقط.</p><div class="mini-list">${sizeRows || '<p class="muted">لا توجد أحجام أو كميات مضافة.</p>'}</div></div></section>`;
+    };
+    openModal(`<div class="modal-head"><h2>${p.name ? 'تعديل صنف' : 'إضافة صنف جديد'}</h2><button class="modal-close" data-action="close-modal" aria-label="إغلاق">×</button></div><form id="productForm" class="field-grid"><label class="field">اسم الصنف<input name="name" required value="${esc(p.name)}"></label><label class="field">القسم<select name="category">${state.categories.map((category) => `<option value="${esc(category.id)}" ${p.category === category.id ? 'selected' : ''}>${esc(category.name)}</option>`).join('')}</select></label><label class="field full">الوصف<input name="description" value="${esc(p.description)}" placeholder="وصف مختصر يظهر للعميل"></label><label class="field">السعر القياسي (إن لم تفعل خيارات تقديم)<input name="basePrice" type="number" required min="0" step="0.01" value="${number(p.basePrice)}"></label><label class="field">السعر قبل التخفيض (اختياري)<input name="oldPrice" type="number" min="0" step="0.01" value="${number(p.oldPrice)}"></label><label class="field">السعرات (اختياري)<input name="calories" type="number" min="0" step="1" value="${number(p.calories)}"></label><label class="field">شارة أعلى الصورة (اختياري)<input name="badge" value="${esc(p.badge)}" placeholder="مثال: تحضير 25 دقيقة"></label><label class="field full">رابط أو مسار الصورة<input name="image" required value="${esc(p.image)}" placeholder="images/product.webp أو https://..."></label><label class="field">رفع صورة من الجهاز<input id="productImageFile" type="file" accept="image/*"><small class="muted">ترفع الصورة إلى ImageKit عند اختيارها.</small></label><div class="field"><span>معاينة الصورة</span><img class="image-preview" src="${esc(p.image)}" alt="معاينة"></div><label class="field"><span>الحالة</span><div class="switch-row"><small>عرض الصنف في الموقع</small><input class="switch" name="active" type="checkbox" ${p.active ? 'checked' : ''}></div></label><div class="field full"><h3>خيارات تقديم الصنف</h3><p class="muted">فعّل سادة أو مع الرز أو الاثنين. عندما تفعل الاثنين، يختار العميل بينهما أولًا ثم يرى أسعار وأحجام الاختيار الذي حدده.</p>${optionEditor('plain', 'سادة', false)}${optionEditor('rice', 'مع الرز', true)}</div><div class="form-footer field full"><button class="secondary" type="button" data-action="close-modal">إلغاء</button><button class="primary" type="submit">حفظ الصنف</button></div></form>`);
   }
 
   function openCouponEditor(coupon) {
@@ -170,8 +217,8 @@
     if (action === 'edit-product') openProductEditor(state.products.find((product) => product.id === id));
     if (action === 'toggle-product') { const product = state.products.find((item) => item.id === id); product.active = !product.active; persist(); render(); }
     if (action === 'delete-product') { const product = state.products.find((item) => item.id === id); if (product && confirm(`حذف «${product.name}» نهائيًا؟`)) { state.products = state.products.filter((item) => item.id !== id); persist('تم حذف الصنف.'); render(); } }
-    if (action === 'add-size') { captureProductDraft(); editorProduct.sizes.push({ id: uid('size'), label: '', price: 0 }); renderProductModal(); }
-    if (action === 'remove-size') { captureProductDraft(); editorProduct.sizes.splice(Number(index), 1); renderProductModal(); }
+    if (action === 'add-serving-size') { captureProductDraft(); const options = editorProduct.servingOptions || (editorProduct.servingOptions = { plain: { enabled: false, basePrice: editorProduct.basePrice || 0, sizes: [], riceAllowedIds: [] }, rice: { enabled: false, basePrice: editorProduct.basePrice || 0, sizes: [], riceAllowedIds: [] } }); (options[target.dataset.serving].sizes || (options[target.dataset.serving].sizes = [])).push({ id: uid('size'), label: '', price: 0 }); renderProductModal(); }
+    if (action === 'remove-serving-size') { captureProductDraft(); const option = editorProduct.servingOptions?.[target.dataset.serving]; if (option) option.sizes.splice(Number(index), 1); renderProductModal(); }
     if (action === 'move-product') moveProductWithinCategory(id, Number(direction));
     if (action === 'edit-rice') openRiceEditor(state.riceTypes.find((rice) => rice.id === id));
     if (action === 'delete-rice') { const rice = state.riceTypes.find((item) => item.id === id); if (rice && confirm(`حذف «${rice.name}»؟`)) { state.riceTypes = state.riceTypes.filter((item) => item.id !== id); persist('تم حذف نوع الرز.'); render(); } }

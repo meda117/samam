@@ -4,7 +4,7 @@
   const CART_KEY = 'samam-restaurant-cart-v2';
 
   const defaultState = {
-    version: 3,
+    version: 4,
     business: {
       name: 'مطعم صمّام',
       tagline: 'مضغوط وأكثر',
@@ -133,7 +133,24 @@
       const template = defaultState.fulfillment.methods.find((item) => item.id === method.id);
       return { ...method, fields: method.fields || copy(template?.fields || []) };
     });
-    result.products = (result.products || []).map((product) => ({ ...product, riceAllowedIds: Array.isArray(product.riceAllowedIds) ? product.riceAllowedIds : null }));
+    result.products = (result.products || []).map((product) => {
+      const normalized = { ...product, riceAllowedIds: Array.isArray(product.riceAllowedIds) ? product.riceAllowedIds : null };
+      // الخيارات الجديدة اختيارية حتى لا تتغير المنتجات القديمة تلقائيًا.
+      // عند تفعيلها من لوحة التحكم يصبح لكل من «سادة» و«مع الرز» أسعاره وأحجامه الخاصة.
+      if (normalized.servingOptions && typeof normalized.servingOptions === 'object') {
+        const option = (entry, fallbackPrice) => ({
+          enabled: Boolean(entry?.enabled),
+          basePrice: Number(entry?.basePrice ?? fallbackPrice ?? 0),
+          sizes: Array.isArray(entry?.sizes) ? entry.sizes.map((size) => ({ id: size.id, label: String(size.label || ''), price: Number(size.price || 0) })).filter((size) => size.id && size.label) : [],
+          riceAllowedIds: Array.isArray(entry?.riceAllowedIds) ? entry.riceAllowedIds : []
+        });
+        normalized.servingOptions = {
+          plain: option(normalized.servingOptions.plain, normalized.basePrice),
+          rice: option(normalized.servingOptions.rice, normalized.basePrice)
+        };
+      }
+      return normalized;
+    });
     return result;
   }
   function getState() {
