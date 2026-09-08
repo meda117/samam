@@ -110,6 +110,22 @@
     const serviceCopy = esc(business.serviceText || '').replace(/\r?\n/g, '<br>');
     service.innerHTML = `<span class="hero-service-copy">${serviceCopy}</span><a href="${esc(whatsappUrl(business.serviceWhatsapp))}" target="_blank" rel="noopener">اضغط هنا</a>`;
     service.style.setProperty('--service-text-color', business.serviceTextColor || '#fdf2d4');
+    // Inline important values make the catering callout immune to old cached
+    // stylesheets. It stays in the lower-left corner of the hero; its CTA is
+    // centered underneath the multi-line text.
+    service.style.setProperty('position', 'absolute', 'important');
+    service.style.setProperty('left', '4px', 'important');
+    service.style.setProperty('right', 'auto', 'important');
+    service.style.setProperty('bottom', '34px', 'important');
+    service.style.setProperty('transform', 'none', 'important');
+    service.style.setProperty('width', '210px', 'important');
+    service.style.setProperty('display', 'flex', 'important');
+    service.style.setProperty('flex-direction', 'column', 'important');
+    service.style.setProperty('align-items', 'stretch', 'important');
+    service.style.setProperty('gap', '7px', 'important');
+    service.style.setProperty('text-align', 'center', 'important');
+    const serviceButton = service.querySelector('a');
+    if (serviceButton) serviceButton.style.setProperty('align-self', 'center', 'important');
     $('#hero').style.backgroundImage = `url("${String(business.heroImage).replace(/"/g, '%22')}")`;
     $('#aboutTitle').textContent = business.aboutTitle;
     $('#aboutText').textContent = business.aboutText;
