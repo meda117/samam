@@ -176,13 +176,9 @@
     if (panel.hidden) return;
     panel.innerHTML = `<div class="coupon-announcement-backdrop" data-action="close-coupon-announcement"></div><section class="coupon-announcement-card" role="dialog" aria-modal="true" aria-label="عروض وأكواد خصم"><button class="coupon-announcement-close" data-action="close-coupon-announcement" aria-label="إغلاق الإعلان">×</button><div class="coupon-announcement-list">${coupons.map((coupon) => {
       const text = couponAnnouncementText(coupon);
-      const productNames = couponScopeNames(coupon);
-      const methodNames = couponMethodNames(coupon);
-      const scopeText = productNames.length ? productNames.join(' • ') : text.allScopeText;
-      const methodsText = methodNames.length ? methodNames.join(' • ') : text.allMethodsText;
       const value = coupon.type === 'percent' ? `${Number(coupon.amount)}%` : money(coupon.amount, state.business.currency);
       const terms = text.terms.length ? `<section class="coupon-terms"><h3>${esc(text.termsTitle)}</h3><ul>${text.terms.map((term) => `<li>${esc(term)}</li>`).join('')}</ul></section>` : '';
-      return `<article class="coupon-announcement-item"><header class="coupon-promo-head"><p class="coupon-announcement-kicker">${esc(text.eyebrow)}</p><h2>${esc(text.title)}</h2></header><div class="coupon-discount"><span>${esc(text.discountLabel)}</span><strong dir="ltr">${esc(value)}</strong></div><div class="coupon-code-box"><small>${esc(text.codeLabel)}</small><code>${esc(coupon.code)}</code><button data-action="copy-coupon" data-code="${esc(coupon.code)}">${esc(text.copyButton)}</button></div><dl class="coupon-details"><div><dt>${esc(text.scopeLabel)}</dt><dd>${esc(scopeText)}</dd></div><div><dt>${esc(text.methodsLabel)}</dt><dd>${esc(methodsText)}</dd></div></dl>${terms}</article>`;
+      return `<article class="coupon-announcement-item"><header class="coupon-promo-head"><p class="coupon-announcement-kicker">${esc(text.eyebrow)}</p><h2>${esc(text.title)}</h2></header><div class="coupon-discount"><span>${esc(text.discountLabel)}</span><strong dir="ltr">${esc(value)}</strong></div><div class="coupon-code-box"><small>${esc(text.codeLabel)}</small><code>${esc(coupon.code)}</code><button data-action="copy-coupon" data-code="${esc(coupon.code)}">${esc(text.copyButton)}</button></div>${terms}</article>`;
     }).join('')}</div></section>`;
   }
 
@@ -335,10 +331,12 @@
     const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
     const method = selectedMethod();
     const deliverySettings = state.fulfillment.delivery;
-    const qualifiesForFree = deliverySettings.freeEnabled && (!Number(deliverySettings.freeOver) || subtotal >= Number(deliverySettings.freeOver));
-    const delivery = method?.kind === 'delivery' && deliverySettings.enabled && !qualifiesForFree ? Number(deliverySettings.fee || 0) : 0;
     const eligibility = appliedCoupon ? couponEligibility(appliedCoupon) : null;
     const discount = couponDiscount(appliedCoupon, eligibility);
+    // أهلية التوصيل المجاني تُحسب بعد الخصم، لا قبل تطبيق كود الخصم.
+    const payableProducts = Math.max(0, subtotal - discount);
+    const qualifiesForFree = deliverySettings.freeEnabled && (!Number(deliverySettings.freeOver) || payableProducts >= Number(deliverySettings.freeOver));
+    const delivery = method?.kind === 'delivery' && deliverySettings.enabled && !qualifiesForFree ? Number(deliverySettings.fee || 0) : 0;
     return { subtotal, delivery, discount, total: Math.max(0, subtotal + delivery - discount), eligibility };
   }
 

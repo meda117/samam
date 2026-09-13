@@ -169,7 +169,9 @@ function couponValidation(code, payload, state) {
   const requestedDiscount = coupon.type === 'fixed' ? Number(coupon.amount || 0) : eligibleSubtotal * (Number(coupon.amount || 0) / 100);
   const discount = Math.min(Math.max(0, requestedDiscount), eligibleSubtotal);
   const deliverySettings = state.fulfillment?.delivery || {};
-  const freeDelivery = deliverySettings.freeEnabled && (!Number(deliverySettings.freeOver || 0) || subtotal >= Number(deliverySettings.freeOver || 0));
+  // لا يبقى التوصيل مجانًا إن خفّض الكود قيمة الأصناف إلى أقل من حد التوصيل المجاني.
+  const payableProducts = Math.max(0, subtotal - discount);
+  const freeDelivery = deliverySettings.freeEnabled && (!Number(deliverySettings.freeOver || 0) || payableProducts >= Number(deliverySettings.freeOver || 0));
   const delivery = method.kind === 'delivery' && deliverySettings.enabled && !freeDelivery ? Number(deliverySettings.fee || 0) : 0;
   return { coupon, method, pricedItems, eligibleItems, subtotal, eligibleSubtotal, delivery, discount, total: Math.max(0, subtotal + delivery - discount) };
 }
