@@ -2,6 +2,21 @@
 (function () {
   const STORAGE_KEY = 'samam-restaurant-state-v2';
   const CART_KEY = 'samam-restaurant-cart-v2';
+  // نصوص إعلان الكود تُحفظ مع كل كود على حدة، حتى يمكن تخصيص العرض العام
+  // والعروض الموجهة لأصناف بعينها من لوحة التحكم بدون تعديل الكود.
+  const couponAnnouncementDefaults = {
+    eyebrow: 'عرض خاص لك',
+    title: 'وفّر في طلبك اليوم',
+    discountLabel: 'خصم',
+    codeLabel: 'كود العرض',
+    copyButton: 'نسخ الكود',
+    scopeLabel: 'يسري على',
+    allScopeText: 'كل أصناف القائمة',
+    methodsLabel: 'متاح مع',
+    allMethodsText: 'كل طرق الاستلام',
+    termsTitle: 'الشروط والأحكام',
+    terms: ['يُستخدم الكود مرة واحدة لكل عميل.', 'لا يُجمع مع عروض أو أكواد خصم أخرى.']
+  };
 
   const defaultState = {
     version: 4,
@@ -133,14 +148,23 @@
       const template = defaultState.fulfillment.methods.find((item) => item.id === method.id);
       return { ...method, fields: method.fields || copy(template?.fields || []) };
     });
-    result.coupons = (result.coupons || []).map((coupon) => ({
-      ...coupon,
-      scope: coupon.scope === 'products' ? 'products' : 'all',
-      productIds: Array.isArray(coupon.productIds) ? coupon.productIds.filter(Boolean) : [],
-      methodIds: Array.isArray(coupon.methodIds) ? coupon.methodIds.filter(Boolean) : [],
-      announce: coupon.announce !== false,
-      singleUse: coupon.singleUse !== false
-    }));
+    result.coupons = (result.coupons || []).map((coupon) => {
+      const rawAnnouncement = coupon.announcementText && typeof coupon.announcementText === 'object' ? coupon.announcementText : {};
+      const rawTerms = Array.isArray(rawAnnouncement.terms) ? rawAnnouncement.terms : String(rawAnnouncement.terms || '').split(/\r?\n/);
+      return {
+        ...coupon,
+        scope: coupon.scope === 'products' ? 'products' : 'all',
+        productIds: Array.isArray(coupon.productIds) ? coupon.productIds.filter(Boolean) : [],
+        methodIds: Array.isArray(coupon.methodIds) ? coupon.methodIds.filter(Boolean) : [],
+        announce: coupon.announce !== false,
+        singleUse: coupon.singleUse !== false,
+        announcementText: {
+          ...copy(couponAnnouncementDefaults),
+          ...rawAnnouncement,
+          terms: rawTerms.map((term) => String(term || '').trim()).filter(Boolean)
+        }
+      };
+    });
     result.products = (result.products || []).map((product) => {
       const normalized = { ...product, riceAllowedIds: Array.isArray(product.riceAllowedIds) ? product.riceAllowedIds : null };
       // الخيارات الجديدة اختيارية حتى لا تتغير المنتجات القديمة تلقائيًا.

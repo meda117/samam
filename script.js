@@ -27,6 +27,24 @@
     return (coupon.productIds || []).map((id) => productById(id)?.name).filter(Boolean);
   };
   const couponMethodNames = (coupon) => (coupon?.methodIds || []).map((id) => state.fulfillment.methods?.find((method) => method.id === id)?.name).filter(Boolean);
+  const couponAnnouncementDefaults = {
+    eyebrow: 'عرض خاص لك',
+    title: 'وفّر في طلبك اليوم',
+    discountLabel: 'خصم',
+    codeLabel: 'كود العرض',
+    copyButton: 'نسخ الكود',
+    scopeLabel: 'يسري على',
+    allScopeText: 'كل أصناف القائمة',
+    methodsLabel: 'متاح مع',
+    allMethodsText: 'كل طرق الاستلام',
+    termsTitle: 'الشروط والأحكام',
+    terms: []
+  };
+  function couponAnnouncementText(coupon) {
+    const raw = coupon?.announcementText && typeof coupon.announcementText === 'object' ? coupon.announcementText : {};
+    const terms = Array.isArray(raw.terms) ? raw.terms : String(raw.terms || '').split(/\r?\n/);
+    return { ...couponAnnouncementDefaults, ...raw, terms: terms.map((term) => String(term || '').trim()).filter(Boolean) };
+  }
   function configuredServingOptions(product) {
     const options = product?.servingOptions;
     if (!options || typeof options !== 'object') return [];
@@ -153,18 +171,19 @@
     const panel = $('#couponAnnouncement');
     if (!panel) return;
     const coupons = visible(state.coupons).filter((coupon) => coupon.announce);
-    const signature = coupons.map((coupon) => [coupon.id, coupon.code, coupon.amount, coupon.scope, (coupon.productIds || []).join(','), (coupon.methodIds || []).join(',')].join(':')).join('|');
-    const dismissed = sessionStorage.getItem('samam-coupon-announcement') === signature;
-    panel.hidden = !coupons.length || dismissed;
+    // الإغلاق يخص العرض الحالي فقط؛ مع إعادة تحميل الصفحة يظهر الإعلان مجددًا.
+    panel.hidden = !coupons.length;
     if (panel.hidden) return;
-    panel.innerHTML = `<div class="coupon-announcement-backdrop" data-action="close-coupon-announcement"></div><section class="coupon-announcement-card" role="dialog" aria-modal="true" aria-label="عروض وأكواد خصم"><button class="coupon-announcement-close" data-action="close-coupon-announcement" aria-label="إغلاق الإعلان">×</button><p class="coupon-announcement-kicker">عرض خاص لك</p><h2>وفّر في طلبك اليوم</h2><div class="coupon-announcement-list">${coupons.map((coupon) => {
+    panel.innerHTML = `<div class="coupon-announcement-backdrop" data-action="close-coupon-announcement"></div><section class="coupon-announcement-card" role="dialog" aria-modal="true" aria-label="عروض وأكواد خصم"><button class="coupon-announcement-close" data-action="close-coupon-announcement" aria-label="إغلاق الإعلان">×</button><div class="coupon-announcement-list">${coupons.map((coupon) => {
+      const text = couponAnnouncementText(coupon);
       const productNames = couponScopeNames(coupon);
       const methodNames = couponMethodNames(coupon);
-      const scopeText = productNames.length ? `يسري على: ${productNames.join(' • ')}` : 'يسري على جميع أصناف القائمة';
-      const methodsText = methodNames.length ? `متاح مع: ${methodNames.join(' • ')}` : 'متاح مع كل طرق الاستلام';
-      const value = coupon.type === 'percent' ? `${Number(coupon.amount)}% خصم` : `${money(coupon.amount, state.business.currency)} خصم`;
-      return `<article class="coupon-announcement-item"><div><strong>${value}</strong><p>${esc(scopeText)}</p><small>${esc(methodsText)}</small></div><div class="coupon-code-box"><code>${esc(coupon.code)}</code><button data-action="copy-coupon" data-code="${esc(coupon.code)}">نسخ الكود</button></div></article>`;
-    }).join('')}</div><p class="coupon-announcement-note">يُطبَّق الخصم على سعر الأصناف المؤهلة فقط، ولا يشمل رسوم التوصيل.</p></section>`;
+      const scopeText = productNames.length ? productNames.join(' • ') : text.allScopeText;
+      const methodsText = methodNames.length ? methodNames.join(' • ') : text.allMethodsText;
+      const value = coupon.type === 'percent' ? `${Number(coupon.amount)}%` : money(coupon.amount, state.business.currency);
+      const terms = text.terms.length ? `<section class="coupon-terms"><h3>${esc(text.termsTitle)}</h3><ul>${text.terms.map((term) => `<li>${esc(term)}</li>`).join('')}</ul></section>` : '';
+      return `<article class="coupon-announcement-item"><header class="coupon-promo-head"><p class="coupon-announcement-kicker">${esc(text.eyebrow)}</p><h2>${esc(text.title)}</h2></header><div class="coupon-discount"><span>${esc(text.discountLabel)}</span><strong dir="ltr">${esc(value)}</strong></div><div class="coupon-code-box"><small>${esc(text.codeLabel)}</small><code>${esc(coupon.code)}</code><button data-action="copy-coupon" data-code="${esc(coupon.code)}">${esc(text.copyButton)}</button></div><dl class="coupon-details"><div><dt>${esc(text.scopeLabel)}</dt><dd>${esc(scopeText)}</dd></div><div><dt>${esc(text.methodsLabel)}</dt><dd>${esc(methodsText)}</dd></div></dl>${terms}</article>`;
+    }).join('')}</div></section>`;
   }
 
   function renderFooter() {
@@ -332,7 +351,7 @@
     itemsEl.innerHTML = cart.length ? cart.map((item, index) => `<div class="cart-item"><div><strong>${esc(item.name)}</strong><small>${[item.servingLabel, item.sizeLabel, item.riceName].filter(Boolean).map(esc).join(' • ')}</small>${discountedKeys.has(item.key) ? `<em class="coupon-item-note">يشمله خصم ${esc(appliedCoupon.code)}</em>` : ''}<span>${money(item.price, state.business.currency)} × ${item.quantity}</span></div><div class="cart-item-actions"><button data-action="cart-quantity" data-index="${index}" data-change="1" aria-label="زيادة">+</button><button data-action="cart-quantity" data-index="${index}" data-change="-1" aria-label="إنقاص">−</button><button class="remove" data-action="remove-cart" data-index="${index}" aria-label="حذف">×</button></div></div>`).join('') : '<p class="empty-cart">السلة فارغة. أضف أصنافك المفضلة للبدء.</p>';
     const { subtotal, delivery, discount, total, eligibility } = totals();
     const appliedNames = eligibility?.valid ? eligibility.productNames.join(' • ') : '';
-    const couponDetail = appliedCoupon && eligibility?.valid ? `<p class="coupon-summary-note">تم تطبيق ${esc(appliedCoupon.code)} على: ${esc(appliedNames)}. رسوم التوصيل غير مشمولة.</p>` : (appliedCoupon && eligibility ? `<p class="coupon-summary-note coupon-summary-error">${esc(eligibility.reason)}</p>` : '');
+    const couponDetail = appliedCoupon && eligibility?.valid ? `<p class="coupon-summary-note">تم تطبيق ${esc(appliedCoupon.code)} على: ${esc(appliedNames)}.</p>` : (appliedCoupon && eligibility ? `<p class="coupon-summary-note coupon-summary-error">${esc(eligibility.reason)}</p>` : '');
     $('#cartSummary').innerHTML = `<div><span>المجموع الفرعي</span><strong>${money(subtotal, state.business.currency)}</strong></div>${delivery ? `<div><span>رسوم التوصيل</span><strong>${money(delivery, state.business.currency)}</strong></div>` : ''}${discount ? `<div class="discount-line"><span>خصم ${esc(appliedCoupon.code)}</span><strong>− ${money(discount, state.business.currency)}</strong></div>` : ''}${couponDetail}<div class="grand-total"><span>الإجمالي</span><strong>${money(total, state.business.currency)}</strong></div>`;
   }
 
@@ -472,9 +491,6 @@
     if (action === 'category') { activeCategory = category; renderCategories(); renderMenu(); }
     if (action === 'show-all') { activeCategory = 'all'; renderCategories(); renderMenu(); }
     if (action === 'close-coupon-announcement') {
-      const coupons = visible(state.coupons).filter((coupon) => coupon.announce);
-      const signature = coupons.map((coupon) => [coupon.id, coupon.code, coupon.amount, coupon.scope, (coupon.productIds || []).join(','), (coupon.methodIds || []).join(',')].join(':')).join('|');
-      sessionStorage.setItem('samam-coupon-announcement', signature);
       $('#couponAnnouncement').hidden = true;
     }
     if (action === 'copy-coupon') {
