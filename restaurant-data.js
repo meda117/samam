@@ -86,8 +86,8 @@
       ]
     },
     coupons: [
-      { id: 'save10', code: 'SAVE10', type: 'percent', amount: 10, minimum: 0, active: true },
-      { id: 'save20', code: 'SAVE20', type: 'percent', amount: 20, minimum: 0, active: true }
+      { id: 'save10', code: 'SAVE10', type: 'percent', amount: 10, minimum: 0, active: true, scope: 'all', productIds: [], methodIds: [], announce: true, singleUse: true },
+      { id: 'save20', code: 'SAVE20', type: 'percent', amount: 20, minimum: 0, active: true, scope: 'all', productIds: [], methodIds: [], announce: true, singleUse: true }
     ],
     products: [
       { id: 'chicken-madghoot', category: 'chicken', name: 'مضغوط دجاج', description: 'دجاج مضغوط بتتبيلتنا الخاصة', image: 'images/مضغوط دجاج.webp', calories: 950, badge: '', basePrice: 39, oldPrice: 0, active: true, requiresRice: true, sizes: [{ id: 'whole', label: 'حبة كاملة', price: 39 }, { id: 'half', label: 'نصف حبة', price: 19.5 }] },
@@ -133,6 +133,14 @@
       const template = defaultState.fulfillment.methods.find((item) => item.id === method.id);
       return { ...method, fields: method.fields || copy(template?.fields || []) };
     });
+    result.coupons = (result.coupons || []).map((coupon) => ({
+      ...coupon,
+      scope: coupon.scope === 'products' ? 'products' : 'all',
+      productIds: Array.isArray(coupon.productIds) ? coupon.productIds.filter(Boolean) : [],
+      methodIds: Array.isArray(coupon.methodIds) ? coupon.methodIds.filter(Boolean) : [],
+      announce: coupon.announce !== false,
+      singleUse: coupon.singleUse !== false
+    }));
     result.products = (result.products || []).map((product) => {
       const normalized = { ...product, riceAllowedIds: Array.isArray(product.riceAllowedIds) ? product.riceAllowedIds : null };
       // الخيارات الجديدة اختيارية حتى لا تتغير المنتجات القديمة تلقائيًا.
@@ -318,5 +326,40 @@
     return result.url;
   }
 
-  window.SamamData = { STORAGE_KEY, CART_KEY, defaultState, copy, getState, setState, resetState, money, uid, normalize, load, save, login, logout, session, onAuthChange, uploadImage, get serverAvailable() { return serverAvailable; } };
+  // لا تسجّل الواجهة استخدام كود الخصم بنفسها؛ عامل Cloudflare هو الذي
+  // يتحقق من الطلب ويحجز الاستخدام بشكل ذري مع رقم الجوال والجهاز وIP.
+  async function redeemCoupon(payload) {
+    const endpoint = String(window.SamamFirebaseConfig?.couponEndpoint || '').trim();
+    if (!/^https:\/\//i.test(endpoint)) {
+      const error = new Error('خدمة تأكيد أكواد الخصم غير مهيأة بعد.');
+      error.code = 'coupon/service-unavailable';
+      throw error;
+    }
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.ok === false) {
+      const error = new Error(body.error || 'تعذر تأكيد كود الخصم.');
+      error.code = body.code || `coupon/http-${response.status}`;
+      throw error;
+    }
+    return body;
+  }
+
+  async function getCouponUsage() {
+    const context = await ensureAuth(await ensureFirebase());
+    const user = await waitForAuth(context);
+    if (!user) {
+      const error = new Error('سجّل دخول الأدمن أولًا.');
+      error.code = 'auth/required';
+      throw error;
+    }
+    const snapshot = await context.databaseSdk.get(context.databaseSdk.ref(context.database, 'couponUsage'));
+    return snapshot.val() || {};
+  }
+
+  window.SamamData = { STORAGE_KEY, CART_KEY, defaultState, copy, getState, setState, resetState, money, uid, normalize, load, save, login, logout, session, onAuthChange, uploadImage, redeemCoupon, getCouponUsage, get serverAvailable() { return serverAvailable; } };
 })();

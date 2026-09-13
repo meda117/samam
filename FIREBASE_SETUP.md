@@ -1,39 +1,29 @@
-# تشغيل Firebase وImageKit
+# تشغيل Firebase وImageKit وخصومات الموقع
 
-## 1. حماية البيانات
+## 1. قواعد البيانات
 
-من Firebase Console افتح **Realtime Database > Rules** والصق محتوى `database.rules.json` ثم اضغط Publish.
+من Firebase Console افتح **Realtime Database > Rules** والصق محتوى `database.rules.json` ثم اضغط **Publish**.
 
-في **Authentication > Sign-in method** فعّل Email/Password وأنشئ حساب الأدمن من تبويب Users. أضف `meda117.github.io` داخل Authorized domains.
+هذه القواعد تجعل بيانات المطعم قابلة للقراءة للعملاء، وتمنح الكتابة ولوحة استخدامات الأكواد لحساب الأدمن فقط:
 
-## 2. تثبيت ونشر Firebase Function لرفع الصور
+`samam@admin.com`
 
-من جذر المشروع نفّذ:
+## 2. حساب الأدمن
 
-```powershell
-npm install -g firebase-tools
-firebase login
-firebase use samam-resturant
-firebase functions:secrets:set IMAGEKIT_PRIVATE_KEY
-```
+من **Authentication > Sign-in method** فعّل **Email/Password**، ثم أنشئ حساب الأدمن بالبريد نفسه. أضف `smam.sa` إلى **Authorized domains** إذا لم يكن موجودًا.
 
-عند طلب القيمة، الصق **مفتاح ImageKit الخاص الجديد** فقط في الطرفية. لا تضعه داخل أي ملف أو GitHub.
+## 3. حفظ البيانات أول مرة
 
-ثم نفّذ:
+ارفع ملفات الموقع إلى الاستضافة، ثم افتح `admin.html` وسجل الدخول. اضغط حفظ مرة واحدة من لوحة التحكم ليتم نسخ البيانات الحالية إلى Realtime Database، وبعدها ستظهر التعديلات على كل الأجهزة.
 
-```powershell
-cd functions
-npm install
-cd ..
-firebase deploy --only functions:imagekitAuth,database
-```
+## 4. الصور والخصومات
 
-## 3. أول حفظ
+- Firebase هنا للبيانات فقط، لا لرفع الصور.
+- صور المنتجات واللوجوهات تذهب إلى ImageKit عبر Cloudflare Worker.
+- حماية أكواد الخصم وسجل استخدامها تستخدم Cloudflare Worker كذلك، لذلك اتبع ملف `CLOUDFLARE_WORKER_SETUP.md` بعد رفع هذا التحديث.
 
-ارفع الملفات المعدلة إلى GitHub Pages، ثم افتح `admin.html` وسجّل دخولك بحساب Firebase. اضغط حفظ مرة واحدة من أي صفحة في لوحة التحكم ليتم نسخ البيانات الحالية إلى Realtime Database. بعدها ستظهر التعديلات لكل الأجهزة فورًا.
+## ملاحظات أمان
 
-## ملاحظات
-
-- بيانات Firebase وImageKit Public Key داخل `firebase-config.js` يمكن نشرها.
-- لا يمكن رفع الصور قبل نشر `imagekitAuth` ووضع Secret.
-- الوظيفة تستخدم ImageKit folder باسم `/samam` وتعيد رابط الصورة المباشر للمنتج.
+- `firebase-config.js` يحتوي معرفات عامة ويمكن نشره.
+- مفتاح ImageKit الخاص وملف Service Account و`COUPON_HASH_SALT` أسرار؛ لا تضعها في الملفات أو GitHub.
+- عند الاشتباه في كشف أي مفتاح، دوّره فورًا من الخدمة المعنية.

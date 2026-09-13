@@ -6,6 +6,9 @@
   let productFilter = 'all';
   let editorProduct = null;
   let editorCoupon = null;
+  let couponUsage = {};
+  let couponUsageLoading = false;
+  let couponUsageLoaded = false;
   const $ = (selector) => document.querySelector(selector);
   const esc = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   const activeItems = (items) => (items || []).filter((item) => item.active !== false);
@@ -45,6 +48,7 @@
     document.querySelectorAll('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.page === page));
     $('#adminMain').innerHTML = ({ overview: overviewPage, products: productsPage, rice: ricePage, fulfillment: fulfillmentPage, coupons: couponsPage, content: contentPage, backup: backupPage })[page]();
     if (page === 'products') addProductOrderControls();
+    if (page === 'coupons') loadCouponUsage();
   }
 
   function overviewPage() {
@@ -97,8 +101,37 @@
     return `<div class="page-intro"><div><h2>التوصيل والاستلام</h2><p>تحكم في الرسوم، التوصيل المجاني، طرق الاستلام والبيانات المطلوبة مع كل طريقة.</p></div></div><form id="fulfillmentForm" class="settings-grid"><article class="panel"><h3>رسوم التوصيل</h3><div class="switch-row"><div><strong>تشغيل التوصيل</strong><small>يعرض خيار التوصيل داخل السلة.</small></div><input class="switch" name="deliveryEnabled" type="checkbox" ${delivery.enabled ? 'checked' : ''}></div><div class="switch-row"><div><strong>توصيل مجاني</strong><small>يمكن جعله لجميع الطلبات أو فوق حد معين.</small></div><input class="switch" name="freeEnabled" type="checkbox" ${delivery.freeEnabled ? 'checked' : ''}></div><div class="field-grid" style="margin-top:14px"><label class="field">رسوم التوصيل<input name="deliveryFee" type="number" min="0" step="0.5" value="${number(delivery.fee)}"></label><label class="field">التوصيل المجاني فوق<input name="freeOver" type="number" min="0" step="1" value="${number(delivery.freeOver)}"><small class="muted">ضع 0 ليكون مجانيًا لكل الطلبات عند تفعيل الخيار.</small></label></div></article><article class="panel"><h3>طرق الاستلام</h3><div class="mini-list">${state.fulfillment.methods.map((method, index) => `<div class="method-fields-editor"><input type="hidden" name="methodId-${index}" value="${esc(method.id)}"><div class="mini-row"><input name="methodName-${index}" value="${esc(method.name)}" required><select class="short" name="methodKind-${index}"><option value="delivery" ${method.kind === 'delivery' ? 'selected' : ''}>توصيل</option><option value="pickup" ${method.kind === 'pickup' ? 'selected' : ''}>استلام</option><option value="car" ${method.kind === 'car' ? 'selected' : ''}>سيارة</option><option value="custom" ${method.kind === 'custom' ? 'selected' : ''}>مخصص</option></select><input class="switch" name="methodEnabled-${index}" type="checkbox" ${method.enabled ? 'checked' : ''} aria-label="تفعيل ${esc(method.name)}"></div><details><summary>البيانات المطلوبة من العميل (${(method.fields || []).length})</summary><div class="mini-list">${(method.fields || []).map((field, fieldIndex) => `<div class="mini-row"><input name="methodFieldLabel-${index}-${fieldIndex}" value="${esc(field.label)}" placeholder="اسم الحقل"><select class="short" name="methodFieldType-${index}-${fieldIndex}"><option value="text" ${field.type === 'text' ? 'selected' : ''}>نص</option><option value="tel" ${field.type === 'tel' ? 'selected' : ''}>جوال</option><option value="number" ${field.type === 'number' ? 'selected' : ''}>رقم</option></select><input class="switch" name="methodFieldRequired-${index}-${fieldIndex}" type="checkbox" ${field.required ? 'checked' : ''} aria-label="حقل مطلوب"><button type="button" data-action="remove-method-field" data-method-index="${index}" data-field-index="${fieldIndex}">×</button></div><input name="methodFieldPlaceholder-${index}-${fieldIndex}" value="${esc(field.placeholder || '')}" placeholder="نص مساعد للحقل">`).join('') || '<p class="muted">لا توجد بيانات إضافية مطلوبة.</p>'}</div><button class="secondary" type="button" data-action="add-method-field" data-method-index="${index}">＋ إضافة حقل</button></details></div>`).join('')}</div><div class="form-footer"><button class="secondary" type="button" data-action="add-method">＋ إضافة طريقة استلام</button></div></article><article class="panel full"><h3>طرق الدفع</h3><div class="field-grid">${state.fulfillment.payments.map((payment, index) => `<label class="field"><input type="hidden" name="paymentId-${index}" value="${esc(payment.id)}"><span>اسم الطريقة<input name="paymentName-${index}" value="${esc(payment.name)}"></span><div class="switch-row"><small>إتاحة هذه الطريقة للعميل</small><input class="switch" name="paymentEnabled-${index}" type="checkbox" ${payment.enabled ? 'checked' : ''}></div></label>`).join('')}</div><div class="form-footer"><button class="secondary" type="button" data-action="add-payment">＋ إضافة طريقة دفع</button><button class="primary" type="submit">حفظ إعدادات الطلب</button></div></article></form>`;
   }
 
+  function couponUsageEntries(couponId) {
+    return Object.entries(couponUsage?.[couponId]?.entries || {}).map(([id, entry]) => ({ id, ...entry })).sort((first, second) => String(second.timestamp || '').localeCompare(String(first.timestamp || '')));
+  }
+  async function loadCouponUsage() {
+    if (couponUsageLoading || couponUsageLoaded) return;
+    couponUsageLoading = true;
+    try {
+      couponUsage = await window.SamamData.getCouponUsage();
+      couponUsageLoaded = true;
+    } catch (error) {
+      if (page === 'coupons') toast(error?.code === 'auth/required' ? 'سجّل دخول الأدمن لعرض سجل استخدامات الأكواد.' : 'تعذر تحميل سجل استخدامات الأكواد. تحقق من قواعد Firebase.');
+    } finally {
+      couponUsageLoading = false;
+      if (page === 'coupons' && couponUsageLoaded) render();
+    }
+  }
+  function couponProductsLabel(coupon) {
+    if (coupon.scope !== 'products') return 'كل الأصناف';
+    const names = (coupon.productIds || []).map((id) => state.products.find((product) => product.id === id)?.name).filter(Boolean);
+    return names.length ? names.join(' • ') : 'لم تُحدد أصناف';
+  }
+  function couponMethodsLabel(coupon) {
+    const names = (coupon.methodIds || []).map((id) => state.fulfillment.methods.find((method) => method.id === id)?.name).filter(Boolean);
+    return names.length ? names.join(' • ') : 'كل طرق الاستلام';
+  }
+  function couponUsageDetails(coupon) {
+    const entries = couponUsageEntries(coupon.id);
+    return `<details class="coupon-usage-details"><summary>${entries.length} استخدام${couponUsageLoading ? ' — جارٍ التحديث…' : ''}</summary><div class="coupon-usage-list">${entries.map((entry) => `<article><strong>${esc(entry.customer?.name || 'عميل')}</strong><span>${esc(entry.customer?.phone || '')}</span><small>${esc(entry.method?.name || '')} • ${new Date(entry.timestamp || 0).toLocaleString('ar-SA')}</small><p>${(entry.order?.items || []).map((item) => `${esc(item.name)} × ${number(item.quantity)}`).join(' • ') || 'لا توجد تفاصيل أصناف'}</p><b>خصم: ${money(entry.order?.discount, state.business.currency)} — الإجمالي: ${money(entry.order?.total, state.business.currency)}</b></article>`).join('') || '<p class="muted">لا توجد استخدامات مسجلة لهذا الكود حتى الآن.</p>'}</div></details>`;
+  }
   function couponsPage() {
-    return `<div class="page-intro"><div><h2>أكواد الخصم</h2><p>أنشئ خصومات بنسبة مئوية أو مبلغ ثابت وحدد الحد الأدنى للطلب.</p></div><button class="primary" data-action="add-coupon">＋ كود خصم</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>الكود</th><th>نوع الخصم</th><th>القيمة</th><th>الحد الأدنى</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>${state.coupons.map((coupon) => `<tr><td><strong>${esc(coupon.code)}</strong></td><td>${coupon.type === 'percent' ? 'نسبة مئوية' : 'مبلغ ثابت'}</td><td>${coupon.type === 'percent' ? `${number(coupon.amount)}%` : money(coupon.amount, state.business.currency)}</td><td>${coupon.minimum ? money(coupon.minimum, state.business.currency) : 'بدون حد'}</td><td><span class="status ${coupon.active ? 'active' : 'inactive'}">${coupon.active ? 'مفعل' : 'مخفي'}</span></td><td><div class="actions"><button class="table-action" data-action="edit-coupon" data-id="${esc(coupon.id)}">تعديل</button><button class="table-action" data-action="toggle-coupon" data-id="${esc(coupon.id)}">${coupon.active ? 'إيقاف' : 'تشغيل'}</button><button class="table-action delete" data-action="delete-coupon" data-id="${esc(coupon.id)}">حذف</button></div></td></tr>`).join('') || '<tr><td colspan="6" class="muted">لا توجد أكواد خصم حاليًا.</td></tr>'}</tbody></table></div>`;
+    return `<div class="page-intro"><div><h2>أكواد الخصم</h2><p>حدّد الأصناف وطرق الاستلام، وأظهر الكود للعملاء، وراجع سجل استخدامه وطلباته.</p></div><button class="primary" data-action="add-coupon">＋ كود خصم</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>الكود</th><th>الخصم</th><th>نطاق الأصناف</th><th>طرق الاستلام</th><th>الاستخدامات</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>${state.coupons.map((coupon) => `<tr><td><strong>${esc(coupon.code)}</strong>${coupon.announce ? '<br><span class="status active">إعلان ظاهر</span>' : ''}</td><td>${coupon.type === 'percent' ? `${number(coupon.amount)}%` : money(coupon.amount, state.business.currency)}<br><span class="muted">حد أدنى: ${coupon.minimum ? money(coupon.minimum, state.business.currency) : 'بدون'}</span></td><td>${esc(couponProductsLabel(coupon))}</td><td>${esc(couponMethodsLabel(coupon))}</td><td>${couponUsageDetails(coupon)}</td><td><span class="status ${coupon.active ? 'active' : 'inactive'}">${coupon.active ? 'مفعل' : 'مخفي'}</span></td><td><div class="actions"><button class="table-action" data-action="edit-coupon" data-id="${esc(coupon.id)}">تعديل</button><button class="table-action" data-action="toggle-coupon" data-id="${esc(coupon.id)}">${coupon.active ? 'إيقاف' : 'تشغيل'}</button><button class="table-action delete" data-action="delete-coupon" data-id="${esc(coupon.id)}">حذف</button></div></td></tr>`).join('') || '<tr><td colspan="7" class="muted">لا توجد أكواد خصم حاليًا.</td></tr>'}</tbody></table></div>`;
   }
 
   function contentPage() {
@@ -205,9 +238,13 @@
   }
 
   function openCouponEditor(coupon) {
-    editorCoupon = copy(coupon || { id: uid('coupon'), code: '', type: 'percent', amount: 10, minimum: 0, active: true });
+    editorCoupon = copy(coupon || { id: uid('coupon'), code: '', type: 'percent', amount: 10, minimum: 0, active: true, scope: 'all', productIds: [], methodIds: [], announce: true, singleUse: true });
     const c = editorCoupon;
-    openModal(`<div class="modal-head"><h2>${c.code ? 'تعديل كود الخصم' : 'إضافة كود خصم'}</h2><button class="modal-close" data-action="close-modal">×</button></div><form id="couponForm" class="field-grid"><label class="field">الكود<input name="code" required maxlength="32" value="${esc(c.code)}" placeholder="مثال: WELCOME10"></label><label class="field">نوع الخصم<select name="type"><option value="percent" ${c.type === 'percent' ? 'selected' : ''}>نسبة مئوية</option><option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>مبلغ ثابت</option></select></label><label class="field">قيمة الخصم<input name="amount" type="number" required min="0" step="0.5" value="${number(c.amount)}"></label><label class="field">الحد الأدنى للطلب<input name="minimum" type="number" min="0" step="0.5" value="${number(c.minimum)}"></label><label class="field full"><span>الحالة</span><div class="switch-row"><small>إتاحة الكود للعميل</small><input class="switch" name="active" type="checkbox" ${c.active ? 'checked' : ''}></div></label><div class="form-footer field full"><button class="secondary" type="button" data-action="close-modal">إلغاء</button><button class="primary" type="submit">حفظ الكود</button></div></form>`);
+    const selectedProducts = new Set(c.productIds || []);
+    const selectedMethods = new Set(c.methodIds || []);
+    const productChoices = state.products.filter((product) => product.active !== false).map((product) => `<label><input name="couponProduct" type="checkbox" value="${esc(product.id)}" ${selectedProducts.has(product.id) ? 'checked' : ''}>${esc(product.name)}</label>`).join('') || '<span class="muted">لا توجد أصناف منشورة حاليًا.</span>';
+    const methodChoices = state.fulfillment.methods.filter((method) => method.enabled !== false && method.active !== false).map((method) => `<label><input name="couponMethod" type="checkbox" value="${esc(method.id)}" ${selectedMethods.has(method.id) ? 'checked' : ''}>${esc(method.name)}</label>`).join('') || '<span class="muted">لا توجد طرق استلام مفعّلة حاليًا.</span>';
+    openModal(`<div class="modal-head"><h2>${c.code ? 'تعديل كود الخصم' : 'إضافة كود خصم'}</h2><button class="modal-close" data-action="close-modal">×</button></div><form id="couponForm" class="field-grid"><label class="field">الكود<input name="code" required maxlength="32" value="${esc(c.code)}" placeholder="مثال: WELCOME10"></label><label class="field">نوع الخصم<select name="type"><option value="percent" ${c.type === 'percent' ? 'selected' : ''}>نسبة مئوية</option><option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>مبلغ ثابت</option></select></label><label class="field">قيمة الخصم<input name="amount" type="number" required min="0" step="0.5" value="${number(c.amount)}"></label><label class="field">الحد الأدنى للأصناف المشمولة<input name="minimum" type="number" min="0" step="0.5" value="${number(c.minimum)}"></label><label class="field full"><span>نطاق الخصم</span><select name="scope"><option value="all" ${c.scope !== 'products' ? 'selected' : ''}>كل الأصناف</option><option value="products" ${c.scope === 'products' ? 'selected' : ''}>أصناف محددة فقط</option></select><small class="muted">عند تحديد أصناف: يطبق الخصم على الأصناف المختارة فقط، ولا يدخل أي صنف آخر في قيمة الخصم.</small></label><div class="field full"><span>الأصناف المشمولة عند اختيار «أصناف محددة»</span><div class="check-grid coupon-check-grid">${productChoices}</div></div><div class="field full"><span>طرق الاستلام المسموحة</span><div class="check-grid coupon-check-grid">${methodChoices}</div><small class="muted">اتركها بلا اختيار ليعمل الكود مع كل طرق الاستلام. رسوم التوصيل لا تُخصم دائمًا.</small></div><div class="field full"><div class="switch-row"><div><strong>إظهار إعلان الكود عند فتح الموقع</strong><small>يعرض الكود وزر نسخه ونطاقه للعميل فور فتح الموقع.</small></div><input class="switch" name="announce" type="checkbox" ${c.announce !== false ? 'checked' : ''}></div><div class="switch-row"><div><strong>الحالة</strong><small>الكود المفعّل يمنع استخدامه أكثر من مرة لنفس الجوال أو الجهاز أو IP.</small></div><input class="switch" name="active" type="checkbox" ${c.active ? 'checked' : ''}></div></div><div class="form-footer field full"><button class="secondary" type="button" data-action="close-modal">إلغاء</button><button class="primary" type="submit">حفظ الكود</button></div></form>`);
   }
 
   function openRiceEditor(rice) {
@@ -294,7 +331,18 @@
     event.preventDefault();
     if (!form.reportValidity()) return;
     if (form.id === 'productForm') handleProductSave(form);
-    if (form.id === 'couponForm') { const value = formObject(form); Object.assign(editorCoupon, { code: value.code.trim().toUpperCase(), type: value.type, amount: number(value.amount), minimum: number(value.minimum), active: form.elements.active.checked }); if (state.coupons.some((coupon) => coupon.code === editorCoupon.code && coupon.id !== editorCoupon.id)) { toast('هذا الكود موجود بالفعل.'); return; } const i = state.coupons.findIndex((coupon) => coupon.id === editorCoupon.id); if (i >= 0) state.coupons[i] = editorCoupon; else state.coupons.unshift(editorCoupon); persist('تم حفظ كود الخصم.'); closeModal(); render(); }
+    if (form.id === 'couponForm') {
+      const value = formObject(form);
+      const productIds = [...form.querySelectorAll('[name="couponProduct"]:checked')].map((input) => input.value);
+      const methodIds = [...form.querySelectorAll('[name="couponMethod"]:checked')].map((input) => input.value);
+      if (value.scope === 'products' && !productIds.length) { toast('اختر صنفًا واحدًا على الأقل، أو غيّر النطاق إلى كل الأصناف.'); return; }
+      Object.assign(editorCoupon, { code: value.code.trim().toUpperCase(), type: value.type, amount: number(value.amount), minimum: number(value.minimum), scope: value.scope === 'products' ? 'products' : 'all', productIds, methodIds, announce: form.elements.announce.checked, active: form.elements.active.checked, singleUse: true });
+      if (state.coupons.some((coupon) => coupon.code === editorCoupon.code && coupon.id !== editorCoupon.id)) { toast('هذا الكود موجود بالفعل.'); return; }
+      const i = state.coupons.findIndex((coupon) => coupon.id === editorCoupon.id);
+      if (i >= 0) state.coupons[i] = editorCoupon; else state.coupons.unshift(editorCoupon);
+      couponUsageLoaded = false;
+      persist('تم حفظ كود الخصم.'); closeModal(); render();
+    }
     if (form.id === 'riceForm') { const value = formObject(form); state.riceTypes.push({ id: uid('rice'), name: value.name.trim(), price: number(value.price), active: value.active === 'true' }); persist('تمت إضافة نوع الرز.'); render(); }
     if (form.id === 'editRiceForm') { const rice = state.riceTypes.find((item) => item.id === form.dataset.id); const value = formObject(form); Object.assign(rice, { name: value.name.trim(), price: number(value.price), active: form.elements.active.checked }); persist('تم حفظ نوع الرز.'); closeModal(); render(); }
     if (form.id === 'fulfillmentForm') {

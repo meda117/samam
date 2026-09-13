@@ -14,5 +14,7 @@ window.SamamFirebaseConfig = {
     publicKey: 'public_S4xgbmgXS1QW/jTOkLC6e/qBQkg=',
     urlEndpoint: 'https://ik.imagekit.io/rcycbximd',
     authEndpoint: 'https://samam-imagekit-auth.abdelrhmanmeda.workers.dev'
-  }
+  },
+  // يراجع عامل Cloudflare الخصم ويحجزه قبل فتح واتساب، كي لا يتكرر استعماله.
+  couponEndpoint: 'https://samam-imagekit-auth.abdelrhmanmeda.workers.dev/coupon'
 };

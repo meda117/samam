@@ -16,6 +16,17 @@
     return digits ? `https://wa.me/${digits}` : '#';
   };
   const productById = (id) => state.products.find((product) => product.id === id);
+  const couponProductIds = (coupon) => coupon?.scope === 'products' ? (coupon.productIds || []) : null;
+  const couponItems = (coupon) => {
+    const allowed = couponProductIds(coupon);
+    return allowed ? cart.filter((item) => allowed.includes(item.productId)) : [...cart];
+  };
+  const couponProductNames = (coupon) => [...new Set(couponItems(coupon).map((item) => item.name))];
+  const couponScopeNames = (coupon) => {
+    if (coupon?.scope !== 'products') return [];
+    return (coupon.productIds || []).map((id) => productById(id)?.name).filter(Boolean);
+  };
+  const couponMethodNames = (coupon) => (coupon?.methodIds || []).map((id) => state.fulfillment.methods?.find((method) => method.id === id)?.name).filter(Boolean);
   function configuredServingOptions(product) {
     const options = product?.servingOptions;
     if (!options || typeof options !== 'object') return [];
@@ -135,6 +146,25 @@
     renderMenu();
     renderCheckoutControls();
     renderCart();
+    renderCouponAnnouncement();
+  }
+
+  function renderCouponAnnouncement() {
+    const panel = $('#couponAnnouncement');
+    if (!panel) return;
+    const coupons = visible(state.coupons).filter((coupon) => coupon.announce);
+    const signature = coupons.map((coupon) => [coupon.id, coupon.code, coupon.amount, coupon.scope, (coupon.productIds || []).join(','), (coupon.methodIds || []).join(',')].join(':')).join('|');
+    const dismissed = sessionStorage.getItem('samam-coupon-announcement') === signature;
+    panel.hidden = !coupons.length || dismissed;
+    if (panel.hidden) return;
+    panel.innerHTML = `<div class="coupon-announcement-backdrop" data-action="close-coupon-announcement"></div><section class="coupon-announcement-card" role="dialog" aria-modal="true" aria-label="عروض وأكواد خصم"><button class="coupon-announcement-close" data-action="close-coupon-announcement" aria-label="إغلاق الإعلان">×</button><p class="coupon-announcement-kicker">عرض خاص لك</p><h2>وفّر في طلبك اليوم</h2><div class="coupon-announcement-list">${coupons.map((coupon) => {
+      const productNames = couponScopeNames(coupon);
+      const methodNames = couponMethodNames(coupon);
+      const scopeText = productNames.length ? `يسري على: ${productNames.join(' • ')}` : 'يسري على جميع أصناف القائمة';
+      const methodsText = methodNames.length ? `متاح مع: ${methodNames.join(' • ')}` : 'متاح مع كل طرق الاستلام';
+      const value = coupon.type === 'percent' ? `${Number(coupon.amount)}% خصم` : `${money(coupon.amount, state.business.currency)} خصم`;
+      return `<article class="coupon-announcement-item"><div><strong>${value}</strong><p>${esc(scopeText)}</p><small>${esc(methodsText)}</small></div><div class="coupon-code-box"><code>${esc(coupon.code)}</code><button data-action="copy-coupon" data-code="${esc(coupon.code)}">نسخ الكود</button></div></article>`;
+    }).join('')}</div><p class="coupon-announcement-note">يُطبَّق الخصم على سعر الأصناف المؤهلة فقط، ولا يشمل رسوم التوصيل.</p></section>`;
   }
 
   function renderFooter() {
@@ -261,27 +291,49 @@
     renderCart();
   }
 
+  function couponEligibility(coupon) {
+    if (!coupon || coupon.active === false) return { valid: false, reason: 'كود الخصم غير صالح أو متوقف.' };
+    const method = selectedMethod();
+    const allowedMethods = coupon.methodIds || [];
+    if (allowedMethods.length && !method) return { valid: false, reason: 'اختر طريقة الاستلام أولًا لمعرفة صلاحية الكود.' };
+    if (allowedMethods.length && !allowedMethods.includes(method.id)) return { valid: false, reason: `هذا الكود غير متاح مع «${method.name}».` };
+    const items = couponItems(coupon);
+    const eligibleSubtotal = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
+    if (!items.length) return { valid: false, reason: 'لا يوجد في السلة صنف مشمول بهذا الكود.', items, eligibleSubtotal };
+    if (eligibleSubtotal < Number(coupon.minimum || 0)) return { valid: false, reason: `الحد الأدنى للأصناف المشمولة هو ${money(coupon.minimum, state.business.currency)}.`, items, eligibleSubtotal };
+    return { valid: true, items, eligibleSubtotal, productNames: [...new Set(items.map((item) => item.name))] };
+  }
+
+  function couponDiscount(coupon, eligibility) {
+    if (!coupon || !eligibility?.valid) return 0;
+    const calculated = coupon.type === 'fixed'
+      ? Number(coupon.amount || 0)
+      : eligibility.eligibleSubtotal * (Number(coupon.amount || 0) / 100);
+    return Math.min(calculated, eligibility.eligibleSubtotal);
+  }
+
   function totals() {
     const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0);
     const method = selectedMethod();
     const deliverySettings = state.fulfillment.delivery;
     const qualifiesForFree = deliverySettings.freeEnabled && (!Number(deliverySettings.freeOver) || subtotal >= Number(deliverySettings.freeOver));
     const delivery = method?.kind === 'delivery' && deliverySettings.enabled && !qualifiesForFree ? Number(deliverySettings.fee || 0) : 0;
-    let discount = 0;
-    if (appliedCoupon && subtotal >= Number(appliedCoupon.minimum || 0)) {
-      discount = appliedCoupon.type === 'fixed' ? Number(appliedCoupon.amount) : subtotal * (Number(appliedCoupon.amount) / 100);
-      discount = Math.min(discount, subtotal);
-    }
-    return { subtotal, delivery, discount, total: Math.max(0, subtotal + delivery - discount) };
+    const eligibility = appliedCoupon ? couponEligibility(appliedCoupon) : null;
+    const discount = couponDiscount(appliedCoupon, eligibility);
+    return { subtotal, delivery, discount, total: Math.max(0, subtotal + delivery - discount), eligibility };
   }
 
   function renderCart() {
     const itemsEl = $('#cartItems');
     const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
     $('#cartCount').textContent = cartCount;
-    itemsEl.innerHTML = cart.length ? cart.map((item, index) => `<div class="cart-item"><div><strong>${esc(item.name)}</strong><small>${[item.servingLabel, item.sizeLabel, item.riceName].filter(Boolean).map(esc).join(' • ')}</small><span>${money(item.price, state.business.currency)} × ${item.quantity}</span></div><div class="cart-item-actions"><button data-action="cart-quantity" data-index="${index}" data-change="1" aria-label="زيادة">+</button><button data-action="cart-quantity" data-index="${index}" data-change="-1" aria-label="إنقاص">−</button><button class="remove" data-action="remove-cart" data-index="${index}" aria-label="حذف">×</button></div></div>`).join('') : '<p class="empty-cart">السلة فارغة. أضف أصنافك المفضلة للبدء.</p>';
-    const { subtotal, delivery, discount, total } = totals();
-    $('#cartSummary').innerHTML = `<div><span>المجموع الفرعي</span><strong>${money(subtotal, state.business.currency)}</strong></div>${delivery ? `<div><span>رسوم التوصيل</span><strong>${money(delivery, state.business.currency)}</strong></div>` : ''}${discount ? `<div class="discount-line"><span>خصم ${esc(appliedCoupon.code)}</span><strong>− ${money(discount, state.business.currency)}</strong></div>` : ''}<div class="grand-total"><span>الإجمالي</span><strong>${money(total, state.business.currency)}</strong></div>`;
+    const couponResult = appliedCoupon ? couponEligibility(appliedCoupon) : null;
+    const discountedKeys = new Set(couponResult?.valid ? couponResult.items.map((item) => item.key) : []);
+    itemsEl.innerHTML = cart.length ? cart.map((item, index) => `<div class="cart-item"><div><strong>${esc(item.name)}</strong><small>${[item.servingLabel, item.sizeLabel, item.riceName].filter(Boolean).map(esc).join(' • ')}</small>${discountedKeys.has(item.key) ? `<em class="coupon-item-note">يشمله خصم ${esc(appliedCoupon.code)}</em>` : ''}<span>${money(item.price, state.business.currency)} × ${item.quantity}</span></div><div class="cart-item-actions"><button data-action="cart-quantity" data-index="${index}" data-change="1" aria-label="زيادة">+</button><button data-action="cart-quantity" data-index="${index}" data-change="-1" aria-label="إنقاص">−</button><button class="remove" data-action="remove-cart" data-index="${index}" aria-label="حذف">×</button></div></div>`).join('') : '<p class="empty-cart">السلة فارغة. أضف أصنافك المفضلة للبدء.</p>';
+    const { subtotal, delivery, discount, total, eligibility } = totals();
+    const appliedNames = eligibility?.valid ? eligibility.productNames.join(' • ') : '';
+    const couponDetail = appliedCoupon && eligibility?.valid ? `<p class="coupon-summary-note">تم تطبيق ${esc(appliedCoupon.code)} على: ${esc(appliedNames)}. رسوم التوصيل غير مشمولة.</p>` : (appliedCoupon && eligibility ? `<p class="coupon-summary-note coupon-summary-error">${esc(eligibility.reason)}</p>` : '');
+    $('#cartSummary').innerHTML = `<div><span>المجموع الفرعي</span><strong>${money(subtotal, state.business.currency)}</strong></div>${delivery ? `<div><span>رسوم التوصيل</span><strong>${money(delivery, state.business.currency)}</strong></div>` : ''}${discount ? `<div class="discount-line"><span>خصم ${esc(appliedCoupon.code)}</span><strong>− ${money(discount, state.business.currency)}</strong></div>` : ''}${couponDetail}<div class="grand-total"><span>الإجمالي</span><strong>${money(total, state.business.currency)}</strong></div>`;
   }
 
   function addToCart(productId) {
@@ -301,7 +353,7 @@
     const key = [product.id, selection.servingId, selection.sizeId, selection.riceId].join('|');
     const existing = cart.find((item) => item.key === key);
     if (existing) existing.quantity += selection.quantity;
-    else cart.push({ key, productId: product.id, name: product.name, servingLabel: activeServing?.label || '', sizeLabel: size?.label || '', riceName: rice?.name || '', price: unitPrice(product, selection), quantity: selection.quantity });
+    else cart.push({ key, productId: product.id, servingId: selection.servingId, sizeId: selection.sizeId, riceId: selection.riceId, name: product.name, servingLabel: activeServing?.label || '', sizeLabel: size?.label || '', riceName: rice?.name || '', price: unitPrice(product, selection), quantity: selection.quantity });
     selection.quantity = 1;
     saveCart();
     renderMenu();
@@ -315,38 +367,95 @@
     if (!code) { appliedCoupon = null; message.textContent = ''; renderCart(); return; }
     const coupon = visible(state.coupons).find((item) => item.code.toUpperCase() === code);
     if (!coupon) { appliedCoupon = null; message.textContent = 'كود الخصم غير صالح.'; message.className = 'form-message error'; renderCart(); return; }
-    if (totals().subtotal < Number(coupon.minimum || 0)) { appliedCoupon = null; message.textContent = `الحد الأدنى لاستخدام الكود هو ${money(coupon.minimum, state.business.currency)}.`; message.className = 'form-message error'; renderCart(); return; }
+    const eligibility = couponEligibility(coupon);
+    if (!eligibility.valid) { appliedCoupon = null; message.textContent = eligibility.reason; message.className = 'form-message error'; renderCart(); return; }
     appliedCoupon = coupon;
-    message.textContent = 'تم تطبيق كود الخصم بنجاح.';
+    message.textContent = `تم تطبيق الكود على: ${eligibility.productNames.join(' • ')}. سيُثبت استخدامه عند إرسال الطلب.`;
     message.className = 'form-message success';
     renderCart();
   }
 
-  function sendOrder() {
+  async function sendOrder() {
     if (!cart.length) { showToast('السلة فارغة حاليًا.'); return; }
     const form = $('#checkoutForm');
     if (!form.reportValidity()) return;
     const method = selectedMethod();
     const payment = visible(state.fulfillment.payments).find((entry) => entry.id === $('#paymentMethod').value);
-    const sum = totals();
+    if (!method || !payment) { showToast('اختر طريقة الاستلام والدفع أولًا.'); return; }
+    const number = String(state.business.whatsapp || '').replace(/\D/g, '');
+    if (!number) { showToast('أضف رقم واتساب المطعم من لوحة التحكم أولًا.'); return; }
+    const couponEligibilityResult = appliedCoupon ? couponEligibility(appliedCoupon) : null;
+    if (appliedCoupon && !couponEligibilityResult.valid) {
+      $('#couponMessage').textContent = couponEligibilityResult.reason;
+      $('#couponMessage').className = 'form-message error';
+      renderCart();
+      return;
+    }
+    let sum = totals();
+    const submit = $('[data-action="send-order"]');
+    // نحجز نافذة واتساب داخل نقرة العميل نفسها حتى لا يحجبها المتصفح بعد
+    // انتظار تأكيد الخادم لكود الخصم.
+    const orderWindow = appliedCoupon ? window.open('', '_blank') : null;
+    if (appliedCoupon) {
+      submit.disabled = true;
+      submit.textContent = 'جارٍ تأكيد الخصم…';
+      try {
+        const confirmation = await window.SamamData.redeemCoupon({
+          code: appliedCoupon.code,
+          customer: { name: $('#customerName').value.trim(), phone: $('#customerPhone').value.trim() },
+          methodId: method.id,
+          items: cart.map((item) => ({ productId: item.productId, servingId: item.servingId || '', sizeId: item.sizeId || '', riceId: item.riceId || '', quantity: Number(item.quantity || 1) })),
+          deviceId: getCouponDeviceId()
+        });
+        const confirmedDiscount = Number(confirmation.discount || 0);
+        sum = { ...sum, discount: confirmedDiscount, total: Math.max(0, sum.subtotal + sum.delivery - confirmedDiscount) };
+        appliedCoupon = { ...appliedCoupon, redemptionId: confirmation.redemptionId, confirmedDiscount };
+      } catch (error) {
+        orderWindow?.close();
+        const message = error?.message || 'تعذر تأكيد كود الخصم.';
+        $('#couponMessage').textContent = message;
+        $('#couponMessage').className = 'form-message error';
+        showToast(message);
+        return;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'إرسال الطلب عبر واتساب';
+      }
+    }
     const lines = cart.map((item, index) => `${index + 1}. ${item.name}${item.servingLabel ? ` (${item.servingLabel})` : ''}${item.sizeLabel ? ` (${item.sizeLabel})` : ''}${item.riceName ? ` - ${item.riceName}` : ''}\n   الكمية: ${item.quantity} | الإجمالي: ${money(item.price * item.quantity, state.business.currency)}`);
     const separator = '--------------------';
+    const discountedProducts = couponEligibilityResult?.productNames?.join(' • ') || '';
     const details = [
       '🛍️ *طلب جديد*', `*${state.business.name}*`, separator,
       '📦 *تفاصيل الأصناف*', ...lines, separator,
       '💳 *ملخص الحساب*',
       `المجموع الفرعي: ${money(sum.subtotal, state.business.currency)}`,
       sum.delivery ? `رسوم التوصيل: ${money(sum.delivery, state.business.currency)}` : 'التوصيل: مجاني',
-      sum.discount ? `الخصم (${appliedCoupon.code}): ${money(sum.discount, state.business.currency)}` : '',
+      sum.discount ? `الخصم (${appliedCoupon.code}) على: ${discountedProducts}` : '',
+      sum.discount ? `قيمة الخصم: ${money(sum.discount, state.business.currency)} (لا يشمل التوصيل)` : '',
       `*الإجمالي النهائي: ${money(sum.total, state.business.currency)}*`, separator,
       '🚚 *الاستلام والدفع*', `طريقة الاستلام: ${method?.name || ''}`, `طريقة الدفع: ${payment?.name || ''}`, separator,
       '👤 *بيانات العميل*', `الاسم: ${$('#customerName').value.trim()}`, `رقم الجوال: ${$('#customerPhone').value.trim()}`,
       ...(method?.fields || []).map((field) => `${field.label}: ${form.elements[`method-field-${field.id}`]?.value.trim() || ''}`),
       separator, 'شكرًا لطلبك 🌟'
     ].filter(Boolean).join('\n');
-    const number = String(state.business.whatsapp || '').replace(/\D/g, '');
-    if (!number) { showToast('أضف رقم واتساب المطعم من لوحة التحكم أولًا.'); return; }
-    window.open(`https://wa.me/${number}?text=${encodeURIComponent(details)}`, '_blank', 'noopener');
+    const whatsappOrderUrl = `https://wa.me/${number}?text=${encodeURIComponent(details)}`;
+    if (orderWindow) orderWindow.location.href = whatsappOrderUrl;
+    else window.open(whatsappOrderUrl, '_blank', 'noopener');
+    cart = [];
+    appliedCoupon = null;
+    saveCart();
+    renderCart();
+  }
+
+  function getCouponDeviceId() {
+    const key = 'samam-coupon-device-id';
+    let value = localStorage.getItem(key);
+    if (!value) {
+      value = crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(key, value);
+    }
+    return value;
   }
 
   document.addEventListener('click', (event) => {
@@ -362,6 +471,19 @@
     const { action, productId, sizeId, servingId, category, change, index } = actionEl.dataset;
     if (action === 'category') { activeCategory = category; renderCategories(); renderMenu(); }
     if (action === 'show-all') { activeCategory = 'all'; renderCategories(); renderMenu(); }
+    if (action === 'close-coupon-announcement') {
+      const coupons = visible(state.coupons).filter((coupon) => coupon.announce);
+      const signature = coupons.map((coupon) => [coupon.id, coupon.code, coupon.amount, coupon.scope, (coupon.productIds || []).join(','), (coupon.methodIds || []).join(',')].join(':')).join('|');
+      sessionStorage.setItem('samam-coupon-announcement', signature);
+      $('#couponAnnouncement').hidden = true;
+    }
+    if (action === 'copy-coupon') {
+      const code = actionEl.dataset.code || '';
+      const copied = navigator.clipboard?.writeText ? navigator.clipboard.writeText(code) : Promise.reject(new Error());
+      copied.then(() => showToast(`تم نسخ كود ${code}.`)).catch(() => {
+        const input = document.createElement('textarea'); input.value = code; document.body.append(input); input.select(); document.execCommand('copy'); input.remove(); showToast(`تم نسخ كود ${code}.`);
+      });
+    }
     if (action === 'toggle-mobile-menu') { $('#mobileMenu').classList.add('open'); $('.mobile-menu-backdrop').classList.add('show'); }
     if (action === 'close-mobile-menu') { $('#mobileMenu').classList.remove('open'); $('.mobile-menu-backdrop').classList.remove('show'); }
     if (action === 'toggle-about') { event.preventDefault(); $('#mobileMenu').classList.remove('open'); $('.mobile-menu-backdrop').classList.remove('show'); const about = $('#about'); const next = about.hidden; about.hidden = !next; about.classList.toggle('hidden', !next); if (next) setTimeout(() => about.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0); }
