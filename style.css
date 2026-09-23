@@ -65,3 +65,71 @@
 /* العبارة الصغيرة والعنوان يُحاذيان مركز النافذة، لا يمينها. */
 .coupon-promo-head{width:100%;padding:0 44px!important;text-align:center}.coupon-announcement-kicker,.coupon-promo-head h2{text-align:center}
 @media(max-width:540px){.coupon-promo-head{padding:0 34px!important}}
+
+/* سلة طلبات مرتبة على خطوات: تبقى الأصناف ظاهرة والملخص ثابتًا. */
+.cart-drawer{width:min(510px,100vw);height:100dvh;max-height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:0;padding:18px 20px 16px;overflow:hidden}
+.drawer-head{flex:none;padding-bottom:13px}
+.cart-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-inline-end:4px}
+.cart-items{padding:10px 0 12px}
+.cart-item{min-width:0}
+.cart-item>div:first-child{min-width:0}
+.cart-item strong,.cart-item small{overflow-wrap:anywhere}
+.checkout-form{display:grid;gap:0;margin:0}
+.checkout-methods,.checkout-form fieldset{display:grid;gap:11px;margin:0;padding:15px;border:1px solid #eaded8;border-radius:14px;background:#fffaf6}
+.checkout-methods[hidden],.checkout-form fieldset[hidden]{display:none!important}
+.checkout-stage-label{margin:0;color:#8f1832;font-size:.9rem;font-weight:900}
+.checkout-methods label,.checkout-form fieldset label{min-width:0}
+.checkout-back-button{justify-self:start;border:0;border-radius:9px;padding:7px 9px;background:transparent;color:#8f1832;font-size:.8rem;font-weight:900;text-decoration:underline}
+.checkout-back-button:hover{background:#f7ebed;text-decoration:none}
+.checkout-footer{position:relative;z-index:1;flex:none;padding-top:12px;background:#fff;border-top:1px solid #eaded8;box-shadow:0 -8px 18px rgba(72,30,40,.05)}
+.checkout-footer .cart-summary{margin:0;padding:11px 12px}
+.checkout-footer .checkout-button{margin:10px 0 0;min-height:48px}
+.checkout-button[hidden]{display:none!important}
+
+@media(max-width:600px){
+  .cart-drawer{width:100vw;padding:14px 14px max(14px,env(safe-area-inset-bottom))}
+  .cart-drawer::before{margin:-8px 0 10px}
+  .drawer-head h2{font-size:1.25rem}
+  .cart-content{padding-inline-end:1px}
+  .cart-item{gap:8px;padding:11px 0}
+  .cart-item-actions{gap:4px}
+  .cart-item-actions button{width:27px;height:27px}
+  .checkout-methods,.checkout-form fieldset{gap:10px;padding:13px;border-radius:12px}
+  .checkout-footer{padding-top:10px}
+  .coupon-row{gap:6px}
+  .coupon-row button{padding-inline:11px}
+}
+
+@media(max-width:380px){
+  .cart-drawer{padding-inline:10px}
+  .drawer-head{padding-bottom:10px}
+  .drawer-head h2{font-size:1.13rem}
+  .cart-item strong{font-size:.88rem}
+  .cart-item small,.cart-item span{font-size:.74rem}
+  .checkout-methods,.checkout-form fieldset{padding:11px}
+  .checkout-footer .cart-summary{padding:9px 10px}
+}
+/* يبقى رأس السلة وزر الإغلاق فوق قائمة الأصناف دائمًا. */
+.cart-drawer::before{position:absolute;top:0;right:20px;left:20px;z-index:3;height:5px;margin:0;pointer-events:none}
+.drawer-head{position:relative;z-index:4;align-items:center;background:#fff}
+.drawer-head .icon-button{position:relative;z-index:5;flex:none}
+.cart-content{position:relative;z-index:1}
+.cart-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:10px}
+.cart-item-image-wrap{display:grid;width:64px;height:64px;place-items:center;overflow:hidden;border:1px solid #eaded8;border-radius:12px;background:#fff8ed}
+.cart-item-image{width:100%;height:100%;object-fit:cover}
+.cart-item-image-placeholder{color:#8f1832;font-size:1.45rem;line-height:1}
+.cart-item-image-wrap.missing-image::after{content:'الصورة غير متاحة';padding:5px;color:#715348;font-size:.62rem;font-weight:800;line-height:1.35;text-align:center}
+.cart-item-info{min-width:0}
+.cart-item-info strong,.cart-item-info small,.cart-item-info span{overflow-wrap:anywhere}
+
+@media(max-width:600px){
+  .cart-drawer::before{right:14px;left:14px}
+  .cart-item{grid-template-columns:56px minmax(0,1fr) auto;gap:8px}
+  .cart-item-image-wrap{width:56px;height:56px;border-radius:10px}
+}
+
+@media(max-width:380px){
+  .cart-drawer::before{right:10px;left:10px}
+  .cart-item{grid-template-columns:50px minmax(0,1fr) auto;gap:6px}
+  .cart-item-image-wrap{width:50px;height:50px}
+}

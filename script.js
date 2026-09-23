@@ -6,6 +6,7 @@
   let activeCategory = 'all';
   let cart = readCart();
   let appliedCoupon = null;
+  let checkoutStage = 'methods';
   const selections = new Map();
 
   const $ = (selector) => document.querySelector(selector);
@@ -286,23 +287,43 @@
     const priorMethod = methodEl.value;
     const priorPayment = paymentEl.value;
     methodEl.innerHTML = `<option value="">اختر طريقة الاستلام</option>${methods.map((method) => `<option value="${esc(method.id)}">${esc(method.name)}</option>`).join('')}`;
-    paymentEl.innerHTML = payments.map((payment) => `<option value="${esc(payment.id)}">${esc(payment.name)}</option>`).join('');
+    paymentEl.innerHTML = `<option value="">اختر طريقة الدفع</option>${payments.map((payment) => `<option value="${esc(payment.id)}">${esc(payment.name)}</option>`).join('')}`;
     if (methods.some((method) => method.id === priorMethod)) methodEl.value = priorMethod;
     if (payments.some((payment) => payment.id === priorPayment)) paymentEl.value = priorPayment;
-    updateMethodFields();
+    updateCheckoutStage({ refreshMethodFields: true });
   }
 
   function selectedMethod() {
     return (state.fulfillment.methods || []).find((method) => method.id === $('#fulfillmentMethod').value && method.enabled !== false && method.active !== false && (method.kind !== 'delivery' || state.fulfillment.delivery.enabled));
   }
-  function updateMethodFields() {
+
+  function selectedPayment() {
+    return (state.fulfillment.payments || []).find((payment) => payment.id === $('#paymentMethod').value && payment.enabled !== false && payment.active !== false);
+  }
+
+  function renderMethodExtraFields(method) {
+    $('#methodExtraFields').innerHTML = method ? (method.fields || []).map((field) => `<label>${esc(field.label)}<input name="method-field-${esc(field.id)}" type="${esc(field.type || 'text')}" ${field.required ? 'required' : ''} autocomplete="off" placeholder="${esc(field.placeholder || '')}"></label>`).join('') : '';
+  }
+
+  function updateCheckoutStage({ forceMethods = false, refreshMethodFields = false } = {}) {
     const method = selectedMethod();
+    const payment = selectedPayment();
+    const readyForDetails = Boolean(method && payment);
+    if (forceMethods || !readyForDetails) checkoutStage = 'methods';
+    else checkoutStage = 'details';
+
+    if (refreshMethodFields) renderMethodExtraFields(method);
+
+    const showDetails = checkoutStage === 'details' && readyForDetails;
+    const methods = $('#checkoutMethods');
     const details = $('#customerDetails');
-    const hasMethod = Boolean(method);
-    details.hidden = !hasMethod;
-    details.disabled = !hasMethod;
-    $('#methodHint').hidden = hasMethod;
-    $('#methodExtraFields').innerHTML = hasMethod ? (method.fields || []).map((field) => `<label>${esc(field.label)}<input name="method-field-${esc(field.id)}" type="${esc(field.type || 'text')}" ${field.required ? 'required' : ''} autocomplete="off" placeholder="${esc(field.placeholder || '')}"></label>`).join('') : '';
+    const submit = $('[data-action="send-order"]');
+    methods.hidden = showDetails;
+    details.hidden = !showDetails;
+    details.disabled = !showDetails;
+    $('#methodHint').hidden = showDetails;
+    submit.hidden = !showDetails;
+    submit.disabled = !showDetails || !cart.length;
     renderCart();
   }
 
@@ -346,11 +367,19 @@
     $('#cartCount').textContent = cartCount;
     const couponResult = appliedCoupon ? couponEligibility(appliedCoupon) : null;
     const discountedKeys = new Set(couponResult?.valid ? couponResult.items.map((item) => item.key) : []);
-    itemsEl.innerHTML = cart.length ? cart.map((item, index) => `<div class="cart-item"><div><strong>${esc(item.name)}</strong><small>${[item.servingLabel, item.sizeLabel, item.riceName].filter(Boolean).map(esc).join(' • ')}</small>${discountedKeys.has(item.key) ? `<em class="coupon-item-note">يشمله خصم ${esc(appliedCoupon.code)}</em>` : ''}<span>${money(item.price, state.business.currency)} × ${item.quantity}</span></div><div class="cart-item-actions"><button data-action="cart-quantity" data-index="${index}" data-change="1" aria-label="زيادة">+</button><button data-action="cart-quantity" data-index="${index}" data-change="-1" aria-label="إنقاص">−</button><button class="remove" data-action="remove-cart" data-index="${index}" aria-label="حذف">×</button></div></div>`).join('') : '<p class="empty-cart">السلة فارغة. أضف أصنافك المفضلة للبدء.</p>';
+    itemsEl.innerHTML = cart.length ? cart.map((item, index) => {
+      const productImage = productById(item.productId)?.image || '';
+      const image = productImage
+        ? `<img class="cart-item-image" src="${esc(optimizedImageUrl(productImage, 180))}" alt="صورة ${esc(item.name)}" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('missing-image');this.remove()">`
+        : '<span class="cart-item-image-placeholder" aria-hidden="true">🍽</span>';
+      return `<div class="cart-item"><div class="cart-item-image-wrap">${image}</div><div class="cart-item-info"><strong>${esc(item.name)}</strong><small>${[item.servingLabel, item.sizeLabel, item.riceName].filter(Boolean).map(esc).join(' • ')}</small>${discountedKeys.has(item.key) ? `<em class="coupon-item-note">يشمله خصم ${esc(appliedCoupon.code)}</em>` : ''}<span>${money(item.price, state.business.currency)} × ${item.quantity}</span></div><div class="cart-item-actions"><button data-action="cart-quantity" data-index="${index}" data-change="1" aria-label="زيادة">+</button><button data-action="cart-quantity" data-index="${index}" data-change="-1" aria-label="إنقاص">−</button><button class="remove" data-action="remove-cart" data-index="${index}" aria-label="حذف">×</button></div></div>`;
+    }).join('') : '<p class="empty-cart">السلة فارغة. أضف أصنافك المفضلة للبدء.</p>';
     const { subtotal, delivery, discount, total, eligibility } = totals();
     const appliedNames = eligibility?.valid ? eligibility.productNames.join(' • ') : '';
     const couponDetail = appliedCoupon && eligibility?.valid ? `<p class="coupon-summary-note">تم تطبيق ${esc(appliedCoupon.code)} على: ${esc(appliedNames)}.</p>` : (appliedCoupon && eligibility ? `<p class="coupon-summary-note coupon-summary-error">${esc(eligibility.reason)}</p>` : '');
     $('#cartSummary').innerHTML = `<div><span>المجموع الفرعي</span><strong>${money(subtotal, state.business.currency)}</strong></div>${delivery ? `<div><span>رسوم التوصيل</span><strong>${money(delivery, state.business.currency)}</strong></div>` : ''}${discount ? `<div class="discount-line"><span>خصم ${esc(appliedCoupon.code)}</span><strong>− ${money(discount, state.business.currency)}</strong></div>` : ''}${couponDetail}<div class="grand-total"><span>الإجمالي</span><strong>${money(total, state.business.currency)}</strong></div>`;
+    const checkoutSubmit = $('[data-action="send-order"]');
+    if (checkoutSubmit) checkoutSubmit.disabled = !cart.length || $('#customerDetails').hidden;
   }
 
   function addToCart(productId) {
@@ -442,14 +471,22 @@
     const lines = cart.map((item, index) => `${index + 1}. ${item.name}${item.servingLabel ? ` (${item.servingLabel})` : ''}${item.sizeLabel ? ` (${item.sizeLabel})` : ''}${item.riceName ? ` - ${item.riceName}` : ''}\n   الكمية: ${item.quantity} | الإجمالي: ${money(item.price * item.quantity, state.business.currency)}`);
     const separator = '--------------------';
     const discountedProducts = couponEligibilityResult?.productNames?.join(' • ') || '';
+    const couponDescription = appliedCoupon?.type === 'percent'
+      ? `نسبة الخصم: ${Number(appliedCoupon.amount || 0)}%`
+      : (appliedCoupon ? `قيمة الخصم المحددة: ${money(appliedCoupon.amount || 0, state.business.currency)}` : '');
+    const deliveryLine = method?.kind === 'delivery'
+      ? (sum.delivery ? `رسوم التوصيل: ${money(sum.delivery, state.business.currency)}` : 'التوصيل: مجاني')
+      : '';
     const details = [
       '🛍️ *طلب جديد*', `*${state.business.name}*`, separator,
       '📦 *تفاصيل الأصناف*', ...lines, separator,
       '💳 *ملخص الحساب*',
       `المجموع الفرعي: ${money(sum.subtotal, state.business.currency)}`,
-      sum.delivery ? `رسوم التوصيل: ${money(sum.delivery, state.business.currency)}` : 'التوصيل: مجاني',
-      sum.discount ? `الخصم (${appliedCoupon.code}) على: ${discountedProducts}` : '',
-      sum.discount ? `قيمة الخصم: ${money(sum.discount, state.business.currency)} (لا يشمل التوصيل)` : '',
+      deliveryLine,
+      appliedCoupon ? `كود الخصم: ${appliedCoupon.code}` : '',
+      couponDescription,
+      appliedCoupon && discountedProducts ? `الأصناف المشمولة: ${discountedProducts}` : '',
+      appliedCoupon ? `قيمة الخصم المطبقة: ${money(sum.discount, state.business.currency)} (لا يشمل التوصيل)` : '',
       `*الإجمالي النهائي: ${money(sum.total, state.business.currency)}*`, separator,
       '🚚 *الاستلام والدفع*', `طريقة الاستلام: ${method?.name || ''}`, `طريقة الدفع: ${payment?.name || ''}`, separator,
       '👤 *بيانات العميل*', `الاسم: ${$('#customerName').value.trim()}`, `رقم الجوال: ${$('#customerPhone').value.trim()}`,
@@ -510,6 +547,7 @@
     if (action === 'cart-quantity') { const item = cart[Number(index)]; if (item) { item.quantity += Number(change); if (item.quantity < 1) cart.splice(Number(index), 1); saveCart(); renderCart(); } }
     if (action === 'remove-cart') { cart.splice(Number(index), 1); saveCart(); renderCart(); }
     if (action === 'apply-coupon') applyCoupon();
+    if (action === 'edit-checkout-methods') updateCheckoutStage({ forceMethods: true });
     if (action === 'send-order') sendOrder();
   });
 
@@ -524,7 +562,8 @@
 
   document.addEventListener('change', (event) => {
     if (event.target.matches('[data-action="select-rice"]')) { const selection = currentSelection(productById(event.target.dataset.productId)); selection.riceId = event.target.value; renderMenu(); }
-    if (event.target.id === 'fulfillmentMethod') updateMethodFields();
+    if (event.target.id === 'fulfillmentMethod') updateCheckoutStage({ refreshMethodFields: true });
+    if (event.target.id === 'paymentMethod') updateCheckoutStage();
   });
   window.addEventListener('hashchange', () => {
     if (window.location.hash === '#about') return;

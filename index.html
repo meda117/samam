@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://samam-resturant-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
   <link rel="preconnect" href="https://ik.imagekit.io" crossorigin>
   <link rel="preload" as="image" href="images/hero-1.jpg" fetchpriority="high">
-  <link rel="stylesheet" href="style.css?v=22">
+  <link rel="stylesheet" href="style.css?v=24">
   <style>
     /* تكبير الشعارات داخل مساحتها، من دون تغيير ارتفاع الهيدر أو الهيرو. */
     #siteHeader .brand{width:220px;height:76px;overflow:visible;justify-content:center}
@@ -31,7 +31,7 @@
   </style>
   <script src="firebase-config.js?v=4" defer></script>
   <script src="restaurant-data.js?v=20" defer></script>
-  <script src="script.js?v=40" defer></script>
+  <script src="script.js?v=42" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#menu">تخطَّ إلى القائمة</a>
@@ -105,21 +105,27 @@
 
   <aside class="cart-drawer" id="cartDrawer" aria-label="سلة الطلبات" aria-hidden="true">
     <div class="drawer-head"><div><p class="section-kicker">طلبك</p><h2>سلة المشتريات</h2></div><button class="icon-button" data-action="close-cart" aria-label="إغلاق">×</button></div>
-    <div class="cart-items" id="cartItems"></div>
-    <form class="checkout-form" id="checkoutForm">
-      <label>طريقة الاستلام<select id="fulfillmentMethod" required></select></label>
-      <p class="method-hint" id="methodHint">اختر طريقة الاستلام لإظهار بيانات الطلب.</p>
-      <fieldset id="customerDetails" hidden disabled>
-        <div id="methodExtraFields"></div>
-        <label>طريقة الدفع<select id="paymentMethod" required></select></label>
-        <label>الاسم<input id="customerName" required autocomplete="name" placeholder="الاسم الكامل"></label>
-        <label>رقم الجوال<input id="customerPhone" required inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx"></label>
-        <div class="coupon-row"><input id="couponInput" autocomplete="off" placeholder="كود الخصم"><button type="button" data-action="apply-coupon">تطبيق</button></div>
-        <p class="form-message" id="couponMessage" aria-live="polite"></p>
-      </fieldset>
-    </form>
-    <div class="cart-summary" id="cartSummary"></div>
-    <button class="checkout-button" data-action="send-order">إرسال الطلب عبر واتساب</button>
+    <div class="cart-content">
+      <div class="cart-items" id="cartItems"></div>
+      <form class="checkout-form" id="checkoutForm">
+        <section class="checkout-methods" id="checkoutMethods" aria-labelledby="checkoutMethodsTitle">
+          <p class="checkout-stage-label" id="checkoutMethodsTitle">أكمل خيارات طلبك</p>
+          <label>طريقة الاستلام<select id="fulfillmentMethod" required></select></label>
+          <label>طريقة الدفع<select id="paymentMethod" required></select></label>
+          <p class="method-hint" id="methodHint">اختر طريقة الاستلام والدفع ثم ننتقل إلى بياناتك.</p>
+        </section>
+        <fieldset id="customerDetails" hidden disabled>
+          <button class="checkout-back-button" type="button" data-action="edit-checkout-methods">← العودة لطرق الاستلام والدفع</button>
+          <p class="checkout-stage-label">بيانات العميل</p>
+          <div id="methodExtraFields"></div>
+          <label>الاسم<input id="customerName" required autocomplete="name" placeholder="الاسم الكامل"></label>
+          <label>رقم الجوال<input id="customerPhone" required inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx"></label>
+          <div class="coupon-row"><input id="couponInput" autocomplete="off" placeholder="كود الخصم"><button type="button" data-action="apply-coupon">تطبيق</button></div>
+          <p class="form-message" id="couponMessage" aria-live="polite"></p>
+        </fieldset>
+      </form>
+    </div>
+    <div class="checkout-footer"><div class="cart-summary" id="cartSummary"></div><button class="checkout-button" data-action="send-order">إرسال الطلب عبر واتساب</button></div>
   </aside>
   <div class="drawer-backdrop" id="drawerBackdrop" data-action="close-cart"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
